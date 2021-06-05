@@ -1,9 +1,12 @@
-This jsonmake tool is meant to replace platform-specific Makefiles and
-scripts.  Only the dependency tracking functionality is currently enabled.
+This jsonmake tool is currently a Python script that uses JSON files to 
+replace platform-specific Makefiles and scripts.  Only the dependency 
+tracking functionality is currently enabled.
 
-It is lightweight, and its primary advantage over make is that targets
-have both dependencies and provides, and provides allow for a duck-typing
-style of abstraction.
+If you need a mature tool for this sort of thing, I recommend meson or redo.
+
+It is lightweight, and its primary advantage over make apart from cleaner 
+syntax and cross-platform potential is that its targets have both dependencies 
+and provides, and this allows for a duck-typing style of abstraction.
 
 The first use case is managing Witcher 3 mods on Linux, but the tool isn't 
 specific to that use case.

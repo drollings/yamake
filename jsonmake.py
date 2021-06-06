@@ -167,7 +167,7 @@ class Target:
             return
             
         for p in target._provides:
-            if p.target is None and p.timestamp < target.timestamp:
+            if p.mtime is None and p.timestamp < target.timestamp:
                 p.timestamp = target.timestamp
                 Target.PropagateTimestampsToAmbiguous(p)
 
@@ -227,17 +227,18 @@ class Target:
         if not Target.base:
             lBases = [ t for t in Target.lBases if t.timestamp or t.needed]
             if len(lBases) > 1:
+                print("Error attempting to use multiple bases: %s." % lBases)
+                sys.exit(1)
+                
                 lBases = [ t for t in Target.lBases if t.timestamp ]
                 print("%s is already installed as a base." % lBases[0].name)
                 return False, None, None, None
+    
             elif not len(lBases):
                 print("No valid base selected.", Target.lBases)
                 return False, None, None, None
             
             Target.base = lBases[0]
-
-        if Target.base and Target.base.timestamp:  
-            print("INSTALLED BASE:", repr(Target.base), Target.base.timestamp, Target.base.needed)
 
         # Set off a recursive determination of dependency depth.
         dPP = defaultdict(set)
@@ -257,19 +258,19 @@ class Target:
         # print("PROVIDED:")
         # pprint(lProvided)
         
-        lAmbiguous = [ t for t in lQueue if t.target is None ]
+        lAmbiguous = [ t for t in lQueue if t.mtime is None ]
 
         ## TODO: Disambiguation from specified recipes must go here
 
-        # for t in [ t for t in lQueue if t.target is None and t.timestamp is None ]:
+        # for t in [ t for t in lQueue if t.mtime is None and t.timestamp is None ]:
         #     if len(t.depends):
-        #         lDepends = [ d for d in t.depends if d.target is None ]
+        #         lDepends = [ d for d in t.depends if d.mtime is None ]
         #         if len(lDepends):
         #             lAmbiguous.append(t)
         #     else:
         #         lAmbiguous.append(t)
 
-        # lQueue = [ t for t in lQueue if t not in Target.dProviders and t.target ]
+        # lQueue = [ t for t in lQueue if t not in Target.dProviders and t.mtime ]
         # lAmbiguous = [ t for t in lAmbiguous if t not in Target.dProviders ]
         
         return True, lQueue, lAmbiguous, dPP
@@ -295,20 +296,20 @@ class Target:
         lOutput = []
 
         if len(lAmbiguous):        
-            lOutput.append('%-30s %s' % ('AMBIGUOUS', 'POTENTIALLY PROVIDED BY'))
+            lOutput.append('%-36s %s' % ('AMBIGUOUS for %s' % (Target.base.name), 'POTENTIALLY PROVIDED BY'))
             for t in lAmbiguous:
-                # lOutput.append('%-30s %-8.8s target: %-45s provides: %-40s depends: %s' % (t.name, str(t.timestamp), t.target, t._provides, t._depends))
+                # lOutput.append('%-36s %-8.8s target: %-45s provides: %-40s depends: %s' % (t.name, str(t.timestamp), t.mtime, t._provides, t._depends))
                 lProviders = [ p.name for p in dPP[t] ]
                 lProviders.sort()
                 lProviders = set(lProviders)
-                lOutput.append('%-30s %s' % (t.name, ', '.join(lProviders)))
+                lOutput.append('%-36s %s' % (t.name, ', '.join(lProviders)))
 
             return False, lOutput
 
-        lOutput.append("QUEUED")
+        lOutput.append("SUCCESS: %s as base" % (Target.base.name) )
         for t in lQueue:
-            # lOutput.append('%-30s %-8.8s target: %-45s provides: %-40s depends: %s' % (t.name, str(t.timestamp), t.target, t._provides, t._depends))
-            lOutput.append('%-30s %-40s %s' % (t.name, t.target, t.getLayers()))
+            # lOutput.append('%-36s %-8.8s target: %-45s provides: %-40s depends: %s' % (t.name, str(t.timestamp), t.mtime, t._provides, t._depends))
+            lOutput.append('%-36s %-40s %s' % (t.name, t.mtime, t.getLayers()))
 
         return True, lOutput
 
@@ -337,7 +338,7 @@ class Target:
         
         self.timestamp = 0.0
         self.needed = False
-        self.target = None
+        self.mtime = None
         self.base = None
         self.depends = None
         self.provides = None
@@ -415,7 +416,7 @@ class Target:
                         continue
                     dep.queue(dDependencyMap, priority + 1, dPP)
         
-        if len(lProviders) == 0 and self.target is None and self._depends:
+        if len(lProviders) == 0 and self.mtime is None and self._depends:
             for dep in self._depends:
                 if dep == self:
                     continue
@@ -453,8 +454,8 @@ class Target:
         return priority
 
     def check_timestamp(self):
-        if self.target:
-            fileentry = self.target % Target.config
+        if self.mtime:
+            fileentry = self.mtime % Target.config
             # print("Checking existence of", fileentry, "for", self.name)
             if os.path.exists(fileentry):
                 # print ("%s exists" % (fileentry))

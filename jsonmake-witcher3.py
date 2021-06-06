@@ -83,6 +83,26 @@ def Initialize(Target):
 
 
 
+def EnqueueTargets(Target, lTargets):
+    if not Target.base:
+        lBases = [ t for t in Target.lBases if t.timestamp or t.needed]
+        if len(lBases) > 1:
+            print("Error attempting to use multiple bases: %s." % lBases)
+            return False, None
+            
+            lBases = [ t for t in Target.lBases if t.timestamp ]
+            print("%s is already installed as a base." % lBases[0].name)
+            return False, None
+
+        elif not len(lBases):
+            print("No valid base selected.", Target.lBases)
+            return False, None
+        
+        Target.base = lBases[0]
+
+    return True, lTargets
+
+
 def BuildQueue(Target, lQueue):
     lStock = [ t for t in lQueue if t in Target.lStocks ]
     if len(lStock) > 1:
@@ -98,3 +118,5 @@ def BuildQueue(Target, lQueue):
         lQueue = [ Target.stock ] + lQueue
 
     return lQueue
+
+

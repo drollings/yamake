@@ -79,7 +79,7 @@
 
 	"aefderaedd": {},
 	"aefderaedd_w3ee": {
-		"target": "%(MODS)s/mod00008_aefderaedd",
+		"target": "%(MODS)s/mod00008_aefderaedd_493",
 		"depends": [
 			"w3ee",
 			"community_patch_b_and_n",
@@ -128,7 +128,7 @@
 		]
 	},
 	"aefderaedd_lazarus": {
-		"target": "%(MODS)s/mod00008_aefderaedd",
+		"target": "%(MODS)s/mod00008_aefderaedd_lazarus",
 		"depends": [
 			"lazarus",
 			"community_patch_b_and_n",
@@ -191,7 +191,7 @@
 	},
 	"playtest": {},
 	"playtest_w3ee": {
-		"target": "%(MODS)s/mod00007_playtest",
+		"target": "%(MODS)s/mod00007_aefderaedd_playtest",
 		"depends": [
 			"w3ee",
 			"aefderaedd",

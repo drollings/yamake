@@ -49,13 +49,6 @@ from pprint import pprint, pformat
 from pathlib import Path
 from collections import defaultdict
 
-lReserved = ( '.git' )
-
-## Utility functions
-
-def is_dir(arg):
-    return os.path.exists(arg) and stat.S_ISDIR(os.stat(arg)[stat.ST_MODE])
-
 
 ############################################################
 # The Target class should match the functionality of a Makefile target, with
@@ -76,6 +69,7 @@ class Target:
     lBases = []
     lStocks = []
     dProviders = defaultdict(set)
+    plugin = None
 
     lFinalizedFields = ('depends', 'provides')
 
@@ -85,74 +79,31 @@ class Target:
             input_str = ''.join(build_file.readlines())
             # print('DEFINITIONS:', input_str)
 
-            o = json.loads(input_str)
+            dLoad = json.loads(input_str)
 
-            for key, value in o.items():
+            ############################################################
+            # Now this gets interesting!  We're going to let JSON files
+            # specify a Python plugin to load with hooks for task-specific
+            # logic, if anything beyond the basics is required.
+            # This build system just got super-extensible.
+            ############################################################
+            
+            if 'jsonmake-plugin' in dLoad:
+                sPlugin = dLoad['jsonmake-plugin']
+                del dLoad['jsonmake-plugin']
+
+                ## TODO:  platform-independent inference of path to load if the build file is elsewhere
+                sys.path.append('.')
+                Target.plugin = __import__(sPlugin)
+
+            for key, value in dLoad.items():
                 Target(key, value)
 
-        # Now we read the layers folder for implicitly defined simple mods that we don't need dependency info for.
-        # By default, layers with a dlc or mods folder are read as stock, with few depends
-        if 'LAYERS' in Target.config and is_dir(Target.config['LAYERS']):
-            pathLayersDir = Path(Target.config['LAYERS'])
-            
-            lLayers = [ f for f in pathLayersDir.iterdir() if f.is_dir() ]
-            lLayers.sort()
-            
-            for layerDir in lLayers:
-                name = layerDir.parts[-1]
-
-                if name[0] == '_' or name.find('_utf') >= 0 or name.find('_supplement') >= 0 or name in Target.index.keys():
-                    # Skip those with explicit definitions
-                    continue
-
-                d = {}
-
-                pathLayer = Path(layerDir)
-                
-                lTargets = [ f for f in pathLayer.glob('ro/dlc/*') if f.is_dir() ]
-                lTargets.sort()
-                if len(lTargets):
-                    p = lTargets[0].parts
-                    d['target'] = r'%(DLC)s/' + p[-1]
-                else:
-                    lTargets = [ f for f in pathLayer.glob('ro/mods/*') if f.is_dir() ]
-                    lTargets.sort()
-                    if len(lTargets):
-                        p = lTargets[0].parts
-                        d['target'] = r'%(MODS)s/' + p[-1]
-
-                if not 'target' in d.keys():
-                    continue
-                
-                Target(name, d)
-
-        # This can only be done when we have the full index.
-        for t in Target.lTargets:
-            t.finalizeInit()
-            
-        base = Target.index['base']
-
-        for t in Target.lTargets:
-            if base in t._provides:
-                Target.lBases.append(t)
-                t.base = t
-            if 'stock' in Target.index and Target.index['stock'] in t._provides:
-                Target.lStocks.append(t)
-
-            t.check_timestamp()
-            
-        if len(Target.lBases) == 1:
-            Target.base = Target.lBases[0]
-        if len(Target.lStocks) == 1:
-            Target.stock = Target.lStocks[0]
-
-        for t in Target.lTargets:
-            l = [ depend for depend in t._depends if depend in Target.lBases ]
-            if len(l) > 1:
-                print("Target %s has multiple bases: %s" % (t.name, t._depends))
-                sys.exit(1)
-            elif len(l) == 1:
-                t.base = l[0]
+            if Target.plugin:
+                Target.plugin.Initialize(Target)
+            else:
+                for t in Target.lTargets:
+                    t.check_timestamp()
 
 
     def InitConfig(sConfigFile = None):
@@ -201,21 +152,14 @@ class Target:
         for l in lSets:
             lQueue += list(l)
 
-        lStock = [ t for t in lQueue if t in Target.lStocks ]
-        if len(lStock) > 1:
-            print("More than one stock?", lStock)
-            sys.exit(1)
-        elif len(lStock):
-            Target.stock = lStock[0]
-        if 'stock' in Target.index and not Target.stock:
-            print("No stock selected.")
-            sys.exit(1)
-
-
         lQueue = [ t for t in lQueue if t != Target.stock ]
-        
-        if Target.stock and not Target.stock.timestamp:
-            lQueue = [ Target.stock ] + lQueue
+
+        if Target.plugin and 'BuildQueue' in Target.plugin.__dict__:
+            lQueue = Target.plugin.BuildQueue(Target, lQueue)
+
+        # TODO - if we're going to work in more detail with the load order,
+        # or try for concurrency, this is the place to fit that logic.  For
+        # now, a list seems to work.
 
         return lQueue
 
@@ -247,49 +191,32 @@ class Target:
                 dPP[provided].add(t)
 
         lQueue = Target.BuildQueue(lTargets, dPP)
-        # pprint(lQueue)
 
+        if Target.plugin and 'Enqueue' in Target.plugin.__dict__:
+            lQueue = Target.plugin.Enqueue(Target, lQueue)
+        
         lProvided = []
         for t in lQueue:
             if t._provides:
                 lProvided += t.provides
         lProvided = list(set(lProvided))
         lProvided.sort()
-        # print("PROVIDED:")
-        # pprint(lProvided)
         
         lAmbiguous = [ t for t in lQueue if t.target is None ]
 
-        ## TODO: Disambiguation from specified recipes must go here
-
-        # for t in [ t for t in lQueue if t.target is None and t.timestamp is None ]:
-        #     if len(t.depends):
-        #         lDepends = [ d for d in t.depends if d.target is None ]
-        #         if len(lDepends):
-        #             lAmbiguous.append(t)
-        #     else:
-        #         lAmbiguous.append(t)
-
-        # lQueue = [ t for t in lQueue if t not in Target.dProviders and t.target ]
-        # lAmbiguous = [ t for t in lAmbiguous if t not in Target.dProviders ]
-        
         return True, lQueue, lAmbiguous, dPP
 
 
     ############################################################    
-    ## Run a build
-    def RunCommand(options, args):
-        # print('DEPENDENCIES')
-        ## TODO: set timestamps according to whatever the target field identifies as
-        ## TODO: iterate through provides and set timestamps
-
+    ## Check a build dependency
+    def BuildQueueCLI(options, args):
         if not len(args):
             return False, [ 'No targets given.' ]
 
         lTargets = [ Target.index[i] for i in args if i in Target.index ]
 
         result, lQueue, lAmbiguous, dPP = Target.Enqueue(lTargets)
-        # pprint(lQueue)
+
         if not result:
             return False, []
 
@@ -349,7 +276,7 @@ class Target:
         self.clean = None
         self.gitbuild = None
         
-        if params:
+        if params and type(params) == dict:
             self.__dict__.update(params)
         
         # print('%s%-8s%s\t%s' % (YEL, 'INIT', NRM, str(self)))
@@ -518,11 +445,7 @@ if __name__ == '__main__':
         Target.JSONOutput()
         sys.exit(0)
 
-    # if len(args) <= 1:
-    #     print(_extra_doc)
-    #     sys.exit(1)
-
-    _, lOutput = Target.RunCommand(options, args[1:])
+    _, lOutput = Target.BuildQueueCLI(options, args[1:])
     print('\n'.join(lOutput))
 
 

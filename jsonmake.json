@@ -1,14 +1,4 @@
 {
-	"jsonmake-plugin": "jsonmake-witcher3",
-
-	"base": {},
-
-	"stock": {
-		"provides": [
-			"base"
-		]
-	},
-
 	"goty": {
 		"target": "%(GAME)s/bin/x64",
 		"provides": [

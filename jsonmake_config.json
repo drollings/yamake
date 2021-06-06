@@ -1,4 +1,6 @@
 {
+	"handler":		"jsonmake-witcher3",
+
 	"GITREPO":		"./repo",
 	"LAYERS":		"./layers",
 	"GAMESPATH":		"./c/Games/witcher3",

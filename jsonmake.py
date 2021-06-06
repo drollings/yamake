@@ -70,8 +70,28 @@ class Target:
     lStocks = []
     dProviders = defaultdict(set)
     plugin = None
+    
 
-    lFinalizedFields = ('depends', 'provides')
+    def InitConfig(sConfigFile = None):
+        for i in ( sConfigFile, "jsonmake_config.json", "%s/.config/layerbuild_config.json" % (os.path.expanduser("~")) ):
+            if i and os.path.exists(i):
+                with codecs.open(sConfigFile, 'r', 'utf_8') as config_file:
+                    Target.config = json.load(config_file)
+
+                ############################################################
+                # Now this gets interesting!  We're going to let JSON files
+                # specify a Python plugin to load with hooks for task-specific
+                # logic, if anything beyond the basics is required.
+                # This build system just got super-extensible.
+                ############################################################
+            
+                if 'handler' in Target.config:
+                    sPlugin = Target.config['handler']
+
+                    ## TODO:  platform-independent determination of path
+                    sys.path.append('.')
+                    Target.plugin = __import__(sPlugin)
+
 
     def Initialize(sBuildFile):
         # First we read in the explicit definitions
@@ -81,52 +101,62 @@ class Target:
 
             dLoad = json.loads(input_str)
 
-            ############################################################
-            # Now this gets interesting!  We're going to let JSON files
-            # specify a Python plugin to load with hooks for task-specific
-            # logic, if anything beyond the basics is required.
-            # This build system just got super-extensible.
-            ############################################################
-            
-            if 'jsonmake-plugin' in dLoad:
-                sPlugin = dLoad['jsonmake-plugin']
-                del dLoad['jsonmake-plugin']
-
-                ## TODO:  platform-independent inference of path to load if the build file is elsewhere
-                sys.path.append('.')
-                Target.plugin = __import__(sPlugin)
+            base = Target('base', {})
+            stock = Target('stock', { '_provides': [ base ], 'provides': [ 'base' ] })
 
             for key, value in dLoad.items():
                 Target(key, value)
 
             if Target.plugin:
-                Target.plugin.Initialize(Target)
-            else:
-                for t in Target.lTargets:
-                    t.check_timestamp()
+                Target.plugin.PluginInitialize(Target)
 
+            for t in Target.lTargets:
+                t.finalizeInit()
 
-    def InitConfig(sConfigFile = None):
-        for i in ( sConfigFile, "jsonmake_config.json", "%s/.config/layerbuild_config.json" % (os.path.expanduser("~")) ):
-            if i and os.path.exists(i):
-                with codecs.open(sConfigFile, 'r', 'utf_8') as config_file:
-                    Target.config = json.load(config_file)
+            if Target.plugin and 'PluginFinalize' in Target.plugin.__dict__:
+                Target.plugin.PluginFinalize(Target, lQueue)
+                
+            for t in Target.lTargets:
+                if base in t._provides:
+                    Target.lBases.append(t)
+                    t.base = t
+                if stock in t._provides:
+                    Target.lStocks.append(t)
 
+            lStocks = Target.lStocks
+            if len(lStocks) > 1:
+                print("More than one stock?", lStocks)
+                sys.exit(1)
+            elif len(lStocks):
+                Target.stock = lStocks[0]
+            if 'stock' in Target.index and not Target.stock:
+                print("No stock selected.")
+                sys.exit(1)
 
-    def PropagateTimestampsToAmbiguous(target):
-        if not target.timestamp:
-            return
-            
-        for p in target._provides:
-            if p.target is None and p.timestamp < target.timestamp:
-                p.timestamp = target.timestamp
-                Target.PropagateTimestampsToAmbiguous(p)
+            [ t.check_timestamp() for t in Target.lTargets ]
+
+            for t in Target.lTargets:
+                l = [ depend for depend in t._depends if depend in Target.lBases ]
+                if len(l) > 1:
+                    print("Target %s has multiple bases: %s" % (t.name, t._depends))
+                    sys.exit(1)
+                elif len(l) == 1:
+                    t.base = l[0]
+
 
     ######################################################################
     # A general-use dependency map generated from a recursive algorithm that
     # assigns the depth of dependencies, thus assuring a given build order.
     def BuildQueue(lTargets, dPP):
         dDependencyMap = defaultdict(int)
+
+        if Target.plugin and 'PluginChooseBase' in Target.plugin.__dict__:
+            if not Target.plugin.PluginChooseBase(Target, lTargets, dPP):
+                print("No valid base selected.", Target.lBases)
+                sys.exit(1)
+        else:
+            if Target.base is None:
+                Target.base = Target.index['base']
 
         for target in lTargets:
             target.queue(dDependencyMap, 0, dPP)
@@ -152,14 +182,8 @@ class Target:
         for l in lSets:
             lQueue += list(l)
 
-        lQueue = [ t for t in lQueue if t != Target.stock ]
-
-        if Target.plugin and 'BuildQueue' in Target.plugin.__dict__:
-            lQueue = Target.plugin.BuildQueue(Target, lQueue)
-
-        # TODO - if we're going to work in more detail with the load order,
-        # or try for concurrency, this is the place to fit that logic.  For
-        # now, a list seems to work.
+        if Target.plugin and 'PluginBuildQueue' in Target.plugin.__dict__:
+            _, lQueue = Target.plugin.PluginBuildQueue(Target, lQueue)
 
         return lQueue
 
@@ -168,22 +192,6 @@ class Target:
         for t in lTargets:
             t.needed = True
         
-        if not Target.base:
-            lBases = [ t for t in Target.lBases if t.timestamp or t.needed]
-            if len(lBases) > 1:
-                print("Error attempting to use multiple bases: %s." % lBases)
-                sys.exit(1)
-                
-                lBases = [ t for t in Target.lBases if t.timestamp ]
-                print("%s is already installed as a base." % lBases[0].name)
-                return False, None, None, None
-    
-            elif not len(lBases):
-                print("No valid base selected.", Target.lBases)
-                return False, None, None, None
-            
-            Target.base = lBases[0]
-
         # Set off a recursive determination of dependency depth.
         dPP = defaultdict(set)
         for t in Target.lTargets:
@@ -192,8 +200,8 @@ class Target:
 
         lQueue = Target.BuildQueue(lTargets, dPP)
 
-        if Target.plugin and 'Enqueue' in Target.plugin.__dict__:
-            lQueue = Target.plugin.Enqueue(Target, lQueue)
+        if Target.plugin and 'PluginEnqueueTargets' in Target.plugin.__dict__:
+            _, lQueue = Target.plugin.PluginEnqueueTargets(Target, lQueue)
         
         lProvided = []
         for t in lQueue:
@@ -247,6 +255,8 @@ class Target:
         lSaved = ( 'target', 'layers', 'depends', 'provides', 'clean', 'bootstrap', 'gitbuild', 'merge_branches' )
 
         for target in Target.lTargets:
+            if target.name in ('base', 'stock' ):
+                continue
             d = { k:v for (k,v) in target.__dict__.items() if k in lSaved and v }
             # lOutput.append('"%s": %s' % (target.name, json.dumps(d)))
             lOutput.append('\t"%s": %s' % (target.name, json.dumps(d)))
@@ -310,10 +320,6 @@ class Target:
         base = Target.base
         bp = Target.base._provides
 
-        # REMASTERED = Target.index['remastered']
-        # if self == REMASTERED:
-        # 	import pdb; pdb.set_trace()
-        
         lProviders = [ p for p in dPP[self] if p.base is None or p.base == base or p.base in bp ]
         if len(lProviders) >= 1:
             l = [ p for p in lProviders if p.base == base ]
@@ -398,17 +404,6 @@ class Target:
         
         return False
             
-    def build(self):
-        # print('%s%-8s%s %s' % (CYN, 'BUILD', NRM, self.name))
-        self.timestamp = time.time()
-        self.needed = True
-
-    def clean(self):
-        # print('%s%-8s%s %s' % (YEL, 'CLEAN', NRM, self.name))
-        pass
-
-
-
 
 if __name__ == '__main__':
     import sys

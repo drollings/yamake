@@ -8,7 +8,7 @@
 	},
 
 	"goty": {
-		"mtime": "%(GAME)s/bin/x64",
+		"target": "%(GAME)s/bin/x64",
 		"provides": [
 			"stock"
 		],
@@ -19,7 +19,7 @@
 	},
 
 	"ghost_mode": {
-		"mtime": "%(GAME)s/content/scripts/gm_generic.ws",
+		"target": "%(GAME)s/content/scripts/gm_generic.ws",
                 "depends": [
 			"community_patch_base",
 			"community_patch_imports"
@@ -29,7 +29,7 @@
 		]
 	},
 	"lazarus": {
-		"mtime": "%(MODS)s/mod_W3EELazarusProject",
+		"target": "%(MODS)s/mod_W3EELazarusProject",
 		"provides": [
 			"base",
 			"w3ee",
@@ -48,7 +48,7 @@
 		]
 	},
 	"w3ee": {
-                "mtime": "%(MODS)s/modW3EEMain",
+                "target": "%(MODS)s/modW3EEMain",
 		"provides": [
 			"base",
 			"all_npc_scabbards",
@@ -62,7 +62,7 @@
 		]
 	},
 	"w3ee_5": {
-                "mtime": "%(MODS)s/modW3EE",
+                "target": "%(MODS)s/modW3EE",
 		"provides": [
 			"base",
 			"w3ee",
@@ -79,7 +79,7 @@
 
 	"aefderaedd": {},
 	"aefderaedd_w3ee": {
-		"mtime": "%(MODS)s/mod00008_aefderaedd",
+		"target": "%(MODS)s/mod00008_aefderaedd",
 		"depends": [
 			"w3ee",
 			"community_patch_b_and_n",
@@ -103,7 +103,7 @@
 		]
 	},
 	"aefderaedd_w3ee_5": {
-		"mtime": "%(MODS)s/mod00008_aefderaedd",
+		"target": "%(MODS)s/mod00008_aefderaedd",
 		"depends": [
 			"w3ee_5",
 			"community_patch_b_and_n",
@@ -128,7 +128,7 @@
 		]
 	},
 	"aefderaedd_lazarus": {
-		"mtime": "%(MODS)s/mod00008_aefderaedd",
+		"target": "%(MODS)s/mod00008_aefderaedd",
 		"depends": [
 			"lazarus",
 			"community_patch_b_and_n",
@@ -191,7 +191,7 @@
 	},
 	"playtest": {},
 	"playtest_w3ee": {
-		"mtime": "%(MODS)s/mod00007_playtest",
+		"target": "%(MODS)s/mod00007_playtest",
 		"depends": [
 			"w3ee",
 			"aefderaedd",
@@ -205,7 +205,7 @@
 		]
 	},
 	"playtest_lazarus": {
-		"mtime": "%(MODS)s/mod00007_aefderaedd_playtest_lazarus",
+		"target": "%(MODS)s/mod00007_aefderaedd_playtest_lazarus",
 		"depends": [
 			"lazarus",
 			"aefderaedd",
@@ -231,7 +231,7 @@
 		"provides": [
 			"community_patch_base"
 		],
-		"mtime": "%(MODS)s/mod0000____CompilationTrigger"
+		"target": "%(MODS)s/mod0000____CompilationTrigger"
 	},
 
 	"friendlyhud": {},
@@ -243,12 +243,12 @@
 		"provides": [
 			"friendlyhud"
 		],
-		"mtime": "%(MODS)s/modFriendlyHUD"
+		"target": "%(MODS)s/modFriendlyHUD"
 	},
 
 	"immersive_cam": {},
 	"immersive_cam_stock": {
-		"mtime": "%(GAME)s/content/scripts/immersiveCamConfig.ws",
+		"target": "%(GAME)s/content/scripts/immersiveCamConfig.ws",
 		"depends": [
 			"stock"
 		],
@@ -258,7 +258,7 @@
 	},
 	"modular_eyes": {},
 	"modular_eyes_stock": {
-		"mtime": "%(DLC)s/dlcmodulareyes",
+		"target": "%(DLC)s/dlcmodulareyes",
 		"depends": [
 			"stock"
 		],
@@ -270,7 +270,7 @@
 		]
 	},
 	"modular_eyes_w3ee": {
-		"mtime": "%(DLC)s/dlcmodulareyes",
+		"target": "%(DLC)s/dlcmodulareyes",
 		"depends": [
 			"w3ee"
 		],
@@ -279,7 +279,7 @@
 		]
 	},
 	"modular_eyes_dilated_pupils": {
-		"mtime": "%(MODS)s/modDilatedPupilsBlackPupils",
+		"target": "%(MODS)s/modDilatedPupilsBlackPupils",
 		"depends": [
 			"modular_eyes"
 		]
@@ -287,7 +287,7 @@
 
 	"primal_needs": {},
 	"primal_needs_stock": {
-		"mtime": "%(DLC)s/DLCwhatsfordinner",
+		"target": "%(DLC)s/DLCwhatsfordinner",
 		"depends": [
 			"stock"
 		],
@@ -302,7 +302,7 @@
 		"depends": [
 			"w3ee"
 		],
-		"mtime": "%(DLC)s/DLCwhatsfordinner",
+		"target": "%(DLC)s/DLCwhatsfordinner",
 		"provides": [
 			"primal_needs"
 		]
@@ -311,7 +311,7 @@
 		"depends": [
 			"w3ee_5"
 		],
-		"mtime": "%(DLC)s/DLCwhatsfordinner",
+		"target": "%(DLC)s/DLCwhatsfordinner",
 		"provides": [
 			"primal_needs"
 		]
@@ -319,41 +319,41 @@
 
 
 	"all_npc_scabbards": {
-		"mtime": "%(DLC)s/Scabbards"
+		"target": "%(DLC)s/Scabbards"
 	},
 	"amm": {
-		"mtime": "%(MODS)s/modAMM"
+		"target": "%(MODS)s/modAMM"
 	},
 	"better_icons_w3ee": {
-		"mtime": "%(MODS)s/modBetterIcons2020_English_Original_W3EE",
+		"target": "%(MODS)s/modBetterIcons2020_English_Original_W3EE",
 		"depends": [
 			"w3ee"
 		]
 	},
 	"bugfixes": {
-		"mtime": "%(MODS)s/modCutscenesLightingFix"
+		"target": "%(MODS)s/modCutscenesLightingFix"
 	},
 	"bugfixes_w3ee": {
-		"mtime": "%(MODS)s/mod0300_bugfixes_merged",
+		"target": "%(MODS)s/mod0300_bugfixes_merged",
 		"depends": [
 			"w3ee",
 			"bugfixes"
 		]
 	},
 	"community_patch_b_and_n": {
-		"mtime": "%(MODS)s/modZBesserwisserScripts",
+		"target": "%(MODS)s/modZBesserwisserScripts",
 		"depends": [
 			"community_patch_menustrings"
 		]
 	},
 	"community_patch_bootstrap": {
-		"mtime": "%(DLC)s/dlcBootstrap"
+		"target": "%(DLC)s/dlcBootstrap"
 	},
 	"community_patch_imports": {
-		"mtime": "%(MODS)s/modSharedImports"
+		"target": "%(MODS)s/modSharedImports"
 	},
 	"community_patch_menustrings": {
-		"mtime": "%(MODS)s/modMenuStrings",
+		"target": "%(MODS)s/modMenuStrings",
 		"depends": [
 			"community_patch_base"
 		]
@@ -361,13 +361,13 @@
 
 	"exotic_arsenal": {},
 	"exotic_arsenal_stock": {
-		"mtime": "%(DLC)s/DLCExoticArsenal",
+		"target": "%(DLC)s/DLCExoticArsenal",
 		"depends": [
 			"community_patch_base"
 		]
 	},
 	"exotic_arsenal_w3ee": {
-		"mtime": "%(MODS)s/modExoticArsenal_W3EE",
+		"target": "%(MODS)s/modExoticArsenal_W3EE",
 		"depends": [
 			"exotic_arsenal_stock",
 			"w3ee"
@@ -378,25 +378,25 @@
 	},
 
 	"improved_merchants": {
-		"mtime": "%(MODS)s/modImprovedMerchants",
+		"target": "%(MODS)s/modImprovedMerchants",
 		"depends": [
 			"community_patch_menustrings"
 		]
 	},
 	"iorveth": {
-		"mtime": "%(DLC)s/DLCIorveth",
+		"target": "%(DLC)s/DLCIorveth",
 		"depends": [
 			"enable_mimics"
 		]
 	},
 	"mcm": {
-		"mtime": "%(DLC)s/DLCmod_spawn_companions",
+		"target": "%(DLC)s/DLCmod_spawn_companions",
 		"depends": [
 			"all_npc_scabbards"
 		]
 	},
 	"rer": {
-		"mtime": "%(DLC)s/dlcmodRandomEncountersReworked",
+		"target": "%(DLC)s/dlcmodRandomEncountersReworked",
 		"depends": [
 			"community_patch_base",
 			"community_patch_bootstrap",
@@ -405,30 +405,30 @@
 		]
 	},
 
-	"better_secondary_weapons":	{	"mtime": "%(MODS)s/modBetterSecondaryWeapons"	},	
-	"custom_time_scale":		{	"mtime": "%(MODS)s/modAHDCustomTimeScale"	},
-	"enable_mimics": 		{	"mtime": "%(DLC)s/DLCEnableMimics"		},
-	"gwent_redux": 			{	"mtime": "%(MODS)s/modGwentRedux"		},
-	"hdreworked": 			{	"mtime": "%(MODS)s/modHDReworkedProject"	},
-	"hdtreebillboards": 		{	"mtime": "%(MODS)s/modHDTreeBillboards"	},
-	"hoods": 			{	"mtime": "%(DLC)s/dlc__hoods"			},
-	"icy_ocean": 			{	"mtime": "%(DLC)s/dlc__icy_ocean"		},
-	"less_indignant_npcs": 		{	"mtime": "%(MODS)s/modLessIndignantNPCs"	},
-	"less_is_more": 		{	"mtime": "%(MODS)s/modLessIsMore"		},
-	"lore_friendly_tweaks": 	{	"mtime": "%(MODS)s/mod001_LFT_1Main"		},
-	"more_robes": 			{	"mtime": "%(DLC)s/dlc_kontusz"			},
-	"music_overhaul_redux": 	{	"mtime": "%(MODS)s/mod_MOPRedux"		},
-	"natural_torchlight": 		{	"mtime": "%(MODS)s/modNaturalTorchlight"	},
-	"no_dirty_lens": 		{	"mtime": "%(MODS)s/modNoDirtyLensEffect"	},
-	"phoenix_lighting": 		{	"mtime": "%(DLC)s/Phoenix_Ultimate_7"		},
-	"radish_seeds": 		{	"mtime": "%(DLC)s/dlcRadishSeeds"		},
-	"redanian_halberdiers": 	{	"mtime": "%(MODS)s/modRedanianHalberdiers"	},
-	"shields": 			{	"mtime": "%(DLC)s/dlc_shields"			},
-	"swords_and_meditation": 	{	"mtime": "%(MODS)s/modSwordscampfire"		},
-	"swords_on_roach": 		{	"mtime": "%(MODS)s/modSwordsonroach"		},
-	"thoughtful_roach": 		{	"mtime": "%(MODS)s/modThoughtfulRoach"		},
-	"tweaks": 			{	"mtime": "%(MODS)s/modTweaks"			},
-	"vampires_have_no_shadows": 	{	"mtime": "%(MODS)s/modVampiresHaveNoShadows"	},
-	"vladimir_ui": 			{	"mtime": "%(DLC)s/dlcVladimirUI"		},
-	"w2project": 			{	"mtime": "%(DLC)s/dlcToussaint"		}
+	"better_secondary_weapons":	{	"target": "%(MODS)s/modBetterSecondaryWeapons"	},	
+	"custom_time_scale":		{	"target": "%(MODS)s/modAHDCustomTimeScale"		},
+	"enable_mimics": 		{	"target": "%(DLC)s/DLCEnableMimics"		},
+	"gwent_redux": 			{	"target": "%(MODS)s/modGwentRedux"			},
+	"hdreworked": 			{	"target": "%(MODS)s/modHDReworkedProject"		},
+	"hdtreebillboards": 		{	"target": "%(MODS)s/modHDTreeBillboards"		},
+	"hoods": 			{	"target": "%(DLC)s/dlc__hoods"			},
+	"icy_ocean": 			{	"target": "%(DLC)s/dlc__icy_ocean"			},
+	"less_indignant_npcs": 		{	"target": "%(MODS)s/modLessIndignantNPCs"		},
+	"less_is_more": 		{	"target": "%(MODS)s/modLessIsMore"			},
+	"lore_friendly_tweaks": 	{	"target": "%(MODS)s/mod001_LFT_1Main"		},
+	"more_robes": 			{	"target": "%(DLC)s/dlc_kontusz"			},
+	"music_overhaul_redux": 	{	"target": "%(MODS)s/mod_MOPRedux"			},
+	"natural_torchlight": 		{	"target": "%(MODS)s/modNaturalTorchlight"		},
+	"no_dirty_lens": 		{	"target": "%(MODS)s/modNoDirtyLensEffect"		},
+	"phoenix_lighting": 		{	"target": "%(DLC)s/Phoenix_Ultimate_7"		},
+	"radish_seeds": 		{	"target": "%(DLC)s/dlcRadishSeeds"			},
+	"redanian_halberdiers": 	{	"target": "%(MODS)s/modRedanianHalberdiers"	},
+	"shields": 			{	"target": "%(DLC)s/dlc_shields"			},
+	"swords_and_meditation": 	{	"target": "%(MODS)s/modSwordscampfire"		},
+	"swords_on_roach": 		{	"target": "%(MODS)s/modSwordsonroach"		},
+	"thoughtful_roach": 		{	"target": "%(MODS)s/modThoughtfulRoach"		},
+	"tweaks": 			{	"target": "%(MODS)s/modTweaks"			},
+	"vampires_have_no_shadows": 	{	"target": "%(MODS)s/modVampiresHaveNoShadows"	},
+	"vladimir_ui": 			{	"target": "%(DLC)s/dlcVladimirUI"			},
+	"w2project": 			{	"target": "%(DLC)s/dlcToussaint"			}
 }

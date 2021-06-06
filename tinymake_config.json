@@ -1,5 +1,5 @@
 {
-	"handler":		"jsonmake-witcher3",
+	"handler":		"tinymake-witcher3",
 
 	"GITREPO":		"./repo",
 	"LAYERS":		"./layers",

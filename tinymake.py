@@ -20,7 +20,7 @@ on the following directory structure:
 |   \- rw
 |- repo
 
-Where at the current working directory, we expect a layerbuild.yaml file,
+Where at the current working directory, we expect a tinymake.json file,
 and the shown directory layout where every layer's ro tree contains files to
 link, and rw tree contains files to unlink in the destination if already
 found, and then copy.
@@ -73,7 +73,7 @@ class Target:
     
 
     def InitConfig(sConfigFile = None):
-        for i in ( sConfigFile, "jsonmake_config.json", "%s/.config/layerbuild_config.json" % (os.path.expanduser("~")) ):
+        for i in ( sConfigFile, "tinymake_config.json", "%s/.config/tinymake_config.json" % (os.path.expanduser("~")) ):
             if i and os.path.exists(i):
                 with codecs.open(sConfigFile, 'r', 'utf_8') as config_file:
                     Target.config = json.load(config_file)
@@ -413,10 +413,10 @@ if __name__ == '__main__':
     args_parser = OptionParser(usage)
 
     args_parser.add_option("-c", "--config", action="store", dest="config", type="string",
-        help="Specify JSON containing configuration details", default="jsonmake_config.json")
+        help="Specify JSON containing configuration details", default="tinymake_config.json")
 
     args_parser.add_option("", "--json", action="store", dest="build", type="string",
-        help="Specify JSON containing a list of layers and build instructions", default='jsonmake.json')
+        help="Specify JSON containing a list of layers and build instructions", default='tinymake.json')
 
     args_parser.add_option("-j", "--json-output", action="store_true", dest="json_output",
         help="Toggle JSON output", default=False)

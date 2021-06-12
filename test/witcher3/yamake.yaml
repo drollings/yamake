@@ -1,3 +1,4 @@
+---
 default:
   depends:
     - stock
@@ -8,17 +9,17 @@ stock:
   provides:
     - base
 
-base:
+any:
   depends:
     - edition
-    
+
 ##############################################################################
 # One entry for stock install.  We'll see if next-gen needs another.
 ##############################################################################
 edition: {}
 
 goty:
-  target: '%(GAME)s/bin/x64'
+  exists: '%(GAME)s/bin/x64'
   provides:
     - edition
   clean:
@@ -26,7 +27,7 @@ goty:
     - '%(GAMESPATH)s/ScriptMerger'
 
 nextgen:
-  target: '%(GAME)s/bin/x64'
+  exists: '%(GAME)s/bin/x64'
   clean:
     - '%(GAMESPATH)s/game'
     - '%(GAMESPATH)s/ScriptMerger'
@@ -35,13 +36,12 @@ nextgen:
 # Whatever provides "base" helps to resolve merges and abstract targets.
 ##############################################################################
 
-# So far, Ghost Mode is a test case for the dependency control.  It has no way
-# to resolve for the aefderaedd or playtest targets, and that is the desired
-# and expected behavior at this point.
+# So far, Ghost Mode is a test case for the dependency control.  It
+# currently has no way to resolve for the aefderaedd or playtest targets.
+
 ghost_mode:
-  target: '%(GAME)s/content/scripts/gm_generic.ws'
+  exists: '%(GAME)s/content/scripts/gm_generic.ws'
   depends:
-    - edition
     - community_patch_base
     - community_patch_imports
   provides:
@@ -50,9 +50,7 @@ ghost_mode:
 # Notice that lazarus provides w3ee, thus establishing it as a potential
 # merge target for w3ee-compatible mods.
 lazarus:
-  target: '%(MODS)s/mod_W3EELazarusProject'
-  depends:
-    - edition
+  exists: '%(MODS)s/mod_W3EELazarusProject'
   provides:
     - base
     - lazaruslike
@@ -67,16 +65,15 @@ lazarus:
     - swords_and_meditation
     - swords_on_roach
     - thoughtful_roach
-  layers:
-    - w3ee_493
-    - lazarus
+  actions:
+    - layers:
+        - w3ee_493
+        - lazarus
 
 # All things compatible with w3ee 4.93 on can use this base, including w3ee_5
 # and lazarus.
 w3ee:
-  target: '%(MODS)s/modW3EEMain'
-  depends:
-    - edition
+  exists: '%(MODS)s/modW3EEMain'
   provides:
     - base
     - all_npc_scabbards
@@ -84,15 +81,14 @@ w3ee:
     - community_patch_imports
     - friendlyhud
     - immersive_cam
-  layers:
-    - w3ee_493
+  actions:
+    - layers:
+        - w3ee_493
 
 # You can merge anything for w3ee into w3ee_5, but not what's specific to
 # w3ee_5 into w3ee, above.
 w3ee_5:
-  target: '%(MODS)s/modW3EE'
-  depends:
-    - edition
+  exists: '%(MODS)s/modW3EE'
   provides:
     - base
     - w3ee
@@ -101,8 +97,9 @@ w3ee_5:
     - community_patch_imports
     - friendlyhud
     - immersive_cam
-  layers:
-    - w3ee
+  actions:
+    - layers:
+        - w3ee
 
 
 ##############################################################################
@@ -116,16 +113,19 @@ w3ee_5:
 # merges stitching them together.
 ##############################################################################
 
-# Aefderaedd expects w3ee functionality, but this can come from any version of
-# W3EE 4.93 on, or from Lazarus.  The correct version of modular eyes for the
-# base will be installed.
+# Aefderaedd expects w3ee functionality, but this can come from any version
+# of W3EE 4.93 on, or from Lazarus.  The correct version of modular eyes for
+# the base will be installed.
+
 aefderaedd: {}
 
-# Now we have base-specific implementations that will satisfy the above abstract
-# target, and will be automatically selected.  Depends which are abstract as well
-# are similarly structured, and they are automatically chosen.
+# Now we have base-specific implementations that will satisfy the above
+# abstract target, and will be automatically selected.  Depends which are
+# abstract as well are similarly structured, and they are automatically
+# chosen.
+
 aefderaedd_w3ee:
-  target: '%(MODS)s/mod00008_aefderaedd_493'
+  exists: '%(MODS)s/mod00008_aefderaedd_493'
   depends:
     - w3ee
     - community_patch_b_and_n
@@ -134,20 +134,21 @@ aefderaedd_w3ee:
     - modular_eyes
     - rer
     - shields
-  merges:
-    - less_indignant_npcs
-    - w3ee_aefderaedd_patch
   provides:
     - aefderaedd
     - less_indignant_npcs
-  layers:
-    - aefderaedd_493
-    - aefderaedd_493_supplement
+  actions:
+    - merges:
+        - less_indignant_npcs
+        - w3ee_aefderaedd_patch
+    - layers:
+        - aefderaedd_493
+        - aefderaedd_493_supplement
 
 # This W3EE 5-specific target has its own merges and layers, and is
 # automatically used when the base fits.
 aefderaedd_w3ee_5:
-  target: '%(MODS)s/mod00008_aefderaedd'
+  exists: '%(MODS)s/mod00008_aefderaedd'
   depends:
     - w3ee_5
     - community_patch_b_and_n
@@ -156,20 +157,21 @@ aefderaedd_w3ee_5:
     - modular_eyes
     - rer
     - shields
-  merges:
-    - w3ee_4.93_to_5.02
-    - less_indignant_npcs
-    - w3ee_5_aefderaedd_patch
   provides:
     - aefderaedd
     - less_indignant_npcs
-  layers:
-    - aefderaedd
-    - aefderaedd_supplement
+  actions:
+    - merges:
+        - w3ee_4.93_to_5.02
+        - less_indignant_npcs
+        - w3ee_5_aefderaedd_patch
+    - layers:
+        - aefderaedd
+        - aefderaedd_supplement
 
 # This Lazarus target helps specify git merges and layers specific to the build.
 aefderaedd_lazarus:
-  target: '%(MODS)s/mod00008_aefderaedd_lazarus'
+  exists: '%(MODS)s/mod00008_aefderaedd_lazarus'
   depends:
     - lazarus
     - community_patch_b_and_n
@@ -178,15 +180,16 @@ aefderaedd_lazarus:
     - modular_eyes
     - rer
     - shields
-  merges:
-    - less_indignant_npcs
-    - lazarus_aefderaedd_patch
   provides:
     - aefderaedd
     - less_indignant_npcs
-  layers:
-    - aefderaedd_lazarus
-    - aefderaedd_lazarus_supplement
+  actions:
+    - merges:
+        - less_indignant_npcs
+        - lazarus_aefderaedd_patch
+    - layers:
+        - aefderaedd_lazarus
+        - aefderaedd_lazarus_supplement
 
 # An abstract target for mod packages approximate to Lazarus' miscellaneous
 # includes.  This allows side-by-side comparison of similar feature sets.
@@ -225,50 +228,54 @@ remastered:
     - no_dirty_lens
     - less_is_more
 
-# An abstract target composed partly of other abstract targets, necessarily w3ee-based.
+# This "playtest" is a composite abstract targets.
+
 playtest: {}
+
 playtest_w3ee:
-  target: '%(MODS)s/mod00007_aefderaedd_playtest'
+  exists: '%(MODS)s/mod00007_aefderaedd_playtest'
   depends:
     - w3ee
     - aefderaedd
     - lazaruslike_lite
     - modular_eyes_dilated_pupils
     - remastered
-  merges:
-    - better_secondary_weapons
-    - less_is_more
-    - improved_merchants
   provides:
     - playtest
-  layers:
-    - playtest_493
-    - playtest_493_supplement
+  actions:
+    - merges:
+        - better_secondary_weapons
+        - less_is_more
+        - improved_merchants
+    - layers:
+        - playtest_493
+        - playtest_493_supplement
 
 playtest_w3ee_5:
-  target: '%(MODS)s/mod00007_aefderaedd_playtest'
+  exists: '%(MODS)s/mod00007_aefderaedd_playtest'
   depends:
     - w3ee_5
     - aefderaedd
     - lazaruslike_lite
     - modular_eyes_dilated_pupils
     - remastered
-  merges:
-    - better_secondary_weapons
-    - less_is_more
-    - improved_merchants
-  layers:
-    - playtest_w3ee
-    - playtest_supplement
   provides:
     - playtest
     - less_is_more
     - better_secondary_weapons
     - improved_merchants
+  actions:
+    - merges:
+        - better_secondary_weapons
+        - less_is_more
+        - improved_merchants
+    - layers:
+        - playtest_w3ee
+        - playtest_supplement
 
 # This takes precedence for Lazarus bases and helps install
 playtest_lazarus:
-  target: '%(MODS)s/mod00007_aefderaedd_playtest_lazarus'
+  exists: '%(MODS)s/mod00007_aefderaedd_playtest_lazarus'
   depends:
     - lazarus
     - aefderaedd
@@ -276,143 +283,145 @@ playtest_lazarus:
     - modular_eyes_dilated_pupils
     - better_secondary_weapons
     - remastered
-  layers:
-    - playtest_lazarus
-    - playtest_lazarus_supplement
   provides:
     - playtest
+  actions:
+    - layers:
+        - playtest_lazarus
+        - playtest_lazarus_supplement
 
 ##############################################################################
 # Simple targets, or families of base-specific simple targets with an
-# abstract target they provide.  See modular_eyes for an example of an abstract target.
+# abstract target they provide.  See modular_eyes for an example.
 ##############################################################################
 
 
 community_patch_base: {}
 community_patch_base_stock:
-  layers:
-    - community_patch_base
+  exists: '%(MODS)s/mod0000____CompilationTrigger'
   provides:
     - community_patch_base
-  target: '%(MODS)s/mod0000____CompilationTrigger'
+  actions:
+    - layers:
+        - community_patch_base
 
 friendlyhud: {}
 friendlyhud_stock:
+  exists: '%(MODS)s/modFriendlyHUD'
   depends:
-    - edition
     - community_patch_base
   provides:
     - friendlyhud
-  target: '%(MODS)s/modFriendlyHUD'
 
 immersive_cam: {}
 immersive_cam_stock:
-  target: '%(GAME)s/content/scripts/immersiveCamConfig.ws'
-  depends:
-    - edition
+  exists: '%(GAME)s/content/scripts/immersiveCamConfig.ws'
   provides:
     - immersive_cam
 
-# See modular eyes: {} - this has no target, though it could have provides
-# and depends, if that made sense.  The base-specific modular_eyes_stock and
-# modular_eyes_w3ee get built as appropriate to provide modular_eyes - or,
-# they don't get built, as with Lazarus, because Lazarus already provides it.
+##############################################################################
+# Notice modular eyes: {} - this has no target, though it could have
+# provides and depends, if that made sense.  The base-specific
+# modular_eyes_stock and modular_eyes_w3ee get built as appropriate to
+# provide modular_eyes - or, they don't get built, as with Lazarus, because
+# Lazarus already provides it.
+##############################################################################
+
 modular_eyes: {}
 modular_eyes_stock:
-  target: '%(DLC)s/dlcmodulareyes'
-  depends:
-    - edition
-  merges:
-    - modular_eyes
+  exists: '%(DLC)s/dlcmodulareyes'
   provides:
     - modular_eyes
-  layers:
-    - modular_eyes
+  actions:
+    - merges:
+        - modular_eyes
+    - layers:
+        - modular_eyes
 
 modular_eyes_w3ee:
-  target: '%(DLC)s/dlcmodulareyes'
+  exists: '%(DLC)s/dlcmodulareyes'
   depends:
     - w3ee
-  merges:
-    - w3ee_modular_eyes
   provides:
     - modular_eyes
-  layers:
-    - modular_eyes_w3ee
+  actions:
+    - merges:
+        - w3ee_modular_eyes
+    - layers:
+        - modular_eyes_w3ee
 
 modular_eyes_dilated_pupils:
-  target: '%(MODS)s/modDilatedPupilsBlackPupils'
+  exists: '%(MODS)s/modDilatedPupilsBlackPupils'
   depends:
     - modular_eyes
 
 primal_needs: {}
 primal_needs_stock:
-  target: '%(DLC)s/DLCwhatsfordinner'
-  depends:
-    - edition
+  exists: '%(DLC)s/DLCwhatsfordinner'
   provides:
     - primal_needs
-  layers:
-    - primal_needs
+  actions:
+    - layers:
+        - primal_needs
 
 primal_needs_w3ee:
   depends:
     - w3ee
-  target: '%(DLC)s/DLCwhatsfordinner'
+  exists: '%(DLC)s/DLCwhatsfordinner'
   provides:
     - primal_needs
 
 primal_needs_w3ee_5:
   depends:
     - w3ee_5
-  target: '%(DLC)s/DLCwhatsfordinner'
+  exists: '%(DLC)s/DLCwhatsfordinner'
   provides:
     - primal_needs
 
 all_npc_scabbards:
-  target: '%(DLC)s/Scabbards'
+  exists: '%(DLC)s/Scabbards'
 
 amm:
-  target: '%(MODS)s/modAMM'
+  exists: '%(MODS)s/modAMM'
 
 better_icons_w3ee:
-  target: '%(MODS)s/modBetterIcons2020_English_Original_W3EE'
+  exists: '%(MODS)s/modBetterIcons2020_English_Original_W3EE'
   depends:
     - w3ee
 
 bugfixes:
-  target: '%(MODS)s/modCutscenesLightingFix'
+  exists: '%(MODS)s/modCutscenesLightingFix'
 
 bugfixes_w3ee:
-  target: '%(MODS)s/mod0300_bugfixes_merged'
+  exists: '%(MODS)s/mod0300_bugfixes_merged'
   depends:
     - w3ee
     - bugfixes
 
 community_patch_b_and_n:
-  target: '%(MODS)s/modZBesserwisserScripts'
+  exists: '%(MODS)s/modZBesserwisserScripts'
   depends:
     - community_patch_menustrings
 
 community_patch_bootstrap:
-  target: '%(DLC)s/dlcBootstrap'
+  exists: '%(DLC)s/dlcBootstrap'
 
 community_patch_imports:
-  target: '%(MODS)s/modSharedImports'
+  exists: '%(MODS)s/modSharedImports'
 
 community_patch_menustrings:
-  target: '%(MODS)s/modMenuStrings'
+  exists: '%(MODS)s/modMenuStrings'
   depends:
     - community_patch_base
 
 exotic_arsenal: {}
 exotic_arsenal_stock:
-  target: '%(DLC)s/DLCExoticArsenal'
+  exists: '%(DLC)s/DLCExoticArsenal'
   depends:
     - community_patch_base
 
 exotic_arsenal_w3ee:
-  target: '%(MODS)s/modExoticArsenal_W3EE'
+  exists: '%(MODS)s/modExoticArsenal_W3EE'
   depends:
     - exotic_arsenal_stock
     - w3ee
@@ -420,103 +429,105 @@ exotic_arsenal_w3ee:
     - exotic_arsenal
 
 improved_merchants:
-  target: '%(MODS)s/modImprovedMerchants'
+  exists: '%(MODS)s/modImprovedMerchants'
   depends:
     - community_patch_menustrings
 
 iorveth:
-  target: '%(DLC)s/DLCIorveth'
+  exists: '%(DLC)s/DLCIorveth'
   depends:
     - enable_mimics
 
 mcm:
-  target: '%(DLC)s/DLCmod_spawn_companions'
+  exists: '%(DLC)s/DLCmod_spawn_companions'
   depends:
     - all_npc_scabbards
 
 rer:
-  target: '%(DLC)s/dlcmodRandomEncountersReworked'
-  bootstrap: 'modCreate_RandomEncountersReworked()'
+  exists: '%(DLC)s/dlcmodRandomEncountersReworked'
   depends:
     - community_patch_base
     - community_patch_bootstrap
     - community_patch_imports
     - friendlyhud
+  actions:
+    - bootstrap: 'modCreate_RandomEncountersReworked()'
+
 
 better_secondary_weapons:
-  target: '%(MODS)s/modBetterSecondaryWeapons'
+  exists: '%(MODS)s/modBetterSecondaryWeapons'
 
 custom_time_scale:
-  target: '%(MODS)s/modAHDCustomTimeScale'
+  exists: '%(MODS)s/modAHDCustomTimeScale'
 
 enable_mimics:
-  target: '%(DLC)s/DLCEnableMimics'
+  exists: '%(DLC)s/DLCEnableMimics'
 
 gwent_redux:
-  target: '%(MODS)s/modGwentRedux'
+  exists: '%(MODS)s/modGwentRedux'
 
 hdreworked:
-  target: '%(MODS)s/modHDReworkedProject'
+  exists: '%(MODS)s/modHDReworkedProject'
 
 hdtreebillboards:
-  target: '%(MODS)s/modHDTreeBillboards'
+  exists: '%(MODS)s/modHDTreeBillboards'
 
 hoods:
-  target: '%(DLC)s/dlc__hoods'
+  exists: '%(DLC)s/dlc__hoods'
 
 icy_ocean:
-  target: '%(DLC)s/dlc__icy_ocean'
+  exists: '%(DLC)s/dlc__icy_ocean'
 
 less_indignant_npcs:
-  target: '%(MODS)s/modLessIndignantNPCs'
+  exists: '%(MODS)s/modLessIndignantNPCs'
 
 less_is_more:
-  target: '%(MODS)s/modLessIsMore'
+  exists: '%(MODS)s/modLessIsMore'
 
 lore_friendly_tweaks:
-  target: '%(MODS)s/mod001_LFT_1Main'
+  exists: '%(MODS)s/mod001_LFT_1Main'
 
 more_robes:
-  target: '%(DLC)s/dlc_kontusz'
+  exists: '%(DLC)s/dlc_kontusz'
 
 music_overhaul_redux:
-  target: '%(MODS)s/mod_MOPRedux'
+  exists: '%(MODS)s/mod_MOPRedux'
 
 natural_torchlight:
-  target: '%(MODS)s/modNaturalTorchlight'
+  exists: '%(MODS)s/modNaturalTorchlight'
 
 no_dirty_lens:
-  target: '%(MODS)s/modNoDirtyLensEffect'
+  exists: '%(MODS)s/modNoDirtyLensEffect'
 
 phoenix_lighting:
-  target: '%(DLC)s/Phoenix_Ultimate_7'
+  exists: '%(DLC)s/Phoenix_Ultimate_7'
 
 radish_seeds:
-  target: '%(DLC)s/dlcRadishSeeds'
+  exists: '%(DLC)s/dlcRadishSeeds'
 
 redanian_halberdiers:
-  target: '%(MODS)s/modRedanianHalberdiers'
+  exists: '%(MODS)s/modRedanianHalberdiers'
 
 shields:
-  target: '%(DLC)s/dlc_shields'
+  exists: '%(DLC)s/dlc_shields'
 
 swords_and_meditation:
-  target: '%(MODS)s/modSwordscampfire'
+  exists: '%(MODS)s/modSwordscampfire'
 
 swords_on_roach:
-  target: '%(MODS)s/modSwordsonroach'
+  exists: '%(MODS)s/modSwordsonroach'
 
 thoughtful_roach:
-  target: '%(MODS)s/modThoughtfulRoach'
+  exists: '%(MODS)s/modThoughtfulRoach'
 
 tweaks:
-  target: '%(MODS)s/modTweaks'
+  exists: '%(MODS)s/modTweaks'
 
 vampires_have_no_shadows:
-  target: '%(MODS)s/modVampiresHaveNoShadows'
+  exists: '%(MODS)s/modVampiresHaveNoShadows'
 
 vladimir_ui:
-  target: '%(DLC)s/dlcVladimirUI'
+  exists: '%(DLC)s/dlcVladimirUI'
 
 w2project:
-  target: '%(DLC)s/dlcToussaint'
+  exists: '%(DLC)s/dlcToussaint'

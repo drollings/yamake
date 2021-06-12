@@ -1,354 +1,298 @@
 # Confuse-A-Cat and all other terms specific to the Confuse A Cat sketch are
-# created by and copyrighted to Monty Python, and this like the rest of this
+# created by and copyrighted to Monty Python, and this like the rest of the
 # unit test should be taken very seriously.
+---
 
 default:
-    depends:
-      - animal
-      - confusion
-      - agency
+  depends:
+    - animal
+    - confusion
+    - agency
 
-all:
-    depends:
-      - animal
-      - confusion
+any:
+  depends:
+    - animal
+    - confusion
 
 agency:
-    depends:
-      - humans
-      - animal
-      - confusion
-    provides:
-      - staff
+  depends:
+    - humans
+    - animal
+    - confusion
+  provides:
+    - staff
 
 confusion:
-    provides:
-      - base
-      - stock
-
-    
-# The traits
+  provides:
+    - base
+    - stock
 
 cognitive:
-    depends:
-      - animal
+  depends:
+    - animal
 
 domesticated:
-    depends:
-      - animal
-      - humans
+  depends:
+    - animal
+    - humans
 
 hearing:
-    depends:
-      - cognitive
-      - noises
+  depends:
+    - cognitive
+    - noises
 
-very_cognitive: 
-    provides:
-      - cognitive
+very_cognitive:
+  provides:
+    - cognitive
 
 wild:
-    depends:
-      - animal
+  depends:
+    - animal
 
 vision: {}
 
 color_vision:
-    depends:
-      - bright_colors
-    provides:
-      - vision
-
-# The critters, and categories of them
+  provides:
+    - vision
 
 animal: {}
 
 bee:
-    target: "things/bee"
-    actions:
-      - set_mtime
-    provides:
-      - insect
-      - color_vision
+  exists: things/bee
+  provides:
+    - insect
+    - color_vision
 
 cat:
-    target: "things/cat"
-    depends:
-      - humans
-    provides:
-      - feline
-    actions:
-      - set_mtime
+  exists: things/cat
+  depends:
+    - humans
+  provides:
+    - feline
 
 feline:
-    provides:
-      - mammal
+  provides:
+    - mammal
 
 gazelle:
-    target: "things/gazelle"
-    actions:
-      - set_mtime
-    provides:
-      - mammal
-      
+  exists: things/gazelle
+  provides:
+    - mammal
+
 insect:
-    provides:
-      - animal
-      - cognitive
+  provides:
+    - animal
+    - cognitive
 
 jellyfish:
-    target: "things/jellyfish"
-    actions:
-      - set_mtime
-    provides:
-      - animal
+  exists: things/jellyfish
+  provides:
+    - animal
 
 mammal:
-    provides:
-      - animal
-      - cognitive
-      - hearing
-      - vision
+  provides:
+    - animal
+    - cognitive
+    - hearing
+    - vision
 
 puma:
-    target: "things/puma"
-    provides:
-      - feline
-    actions:
-      - set_mtime
+  exists: things/puma
+  provides:
+    - feline
 
 reptile:
-    provides:
-      - animal
-      - cognitive
+  provides:
+    - animal
+    - cognitive
 
 stoat:
-    target: "things/stoat"
-    actions:
-      - set_mtime
-    provides:
-      - mammal
+  exists: things/stoat
+  provides:
+    - mammal
 
 unicorn:
-    provides:
-      - mammal
-      
+  provides:
+    - mammal
+
 vole:
-    target: "things/vole"
-    actions:
-      - set_mtime
-    provides:
-      - mammal
+  exists: things/vole
+  provides:
+    - mammal
 
 wildebeest:
-    target: "things/wildebeest"
-    actions:
-      - set_mtime
-    provides:
-      - mammal
+  exists: things/wildebeest
+  provides:
+    - mammal
 
-
-# Our assets for confusing critters
 humans:
-    target: "things/humans"
-    actions:
-      - set_mtime
+  exists: things/humans
 
 staff:
-    depends:
-      - humans
-      - sergeant
+  depends:
+    - humans
+    - sergeant
 
 stage_hands:
-    depends:
-      - staff
+  depends:
+    - staff
 
 stage:
-    target: "things/stage"
-    actions:
-      - set_mtime
-    depends:
-      - stage_hands
+  exists: things/stage
+  depends:
+    - stage_hands
 
 surrealism:
-    depends:
-      - very_cognitive
-    provides:
-      - confusion
+  depends:
+    - very_cognitive
+  provides:
+    - confusion
 
 funny_things:
-    target: "things/funny_things"
-    actions:
-      - set_mtime
-    depends:
-      - cognitive
+  exists: things/funny_things
+  depends:
+    - cognitive
 
 magic_tricks:
-    target: "things/magic_tricks"
-    actions:
-      - set_mtime
-    depends:
-      - humans
-    provides:
-      - surrealism
+  exists: things/magic_tricks
+  depends:
+    - humans
+  provides:
+    - surrealism
 
 magic_trick_confusion:
-    depends:
-      - cognitive
-      - vision
-      - magic_tricks
-    provides:
-      - confusion
+  depends:
+    - cognitive
+    - vision
+    - magic_tricks
+  provides:
+    - confusion
 
 noises: {}
 
 loud_noises:
-    provides:
-      - noises
+  provides:
+    - noises
 
 popped_balloon:
-    target: "things/balloon"
-    actions:
-      - set_mtime
-    depends:
-      - humans
-    provides:
-      - loud_noises
+  exists: things/balloon
+  depends:
+    - humans
+  provides:
+    - loud_noises
 
 cannon:
-    target: "things/cannon"
-    actions:
-      - set_mtime
-    depends:
-      - humans
-    provides:
-      - loud_noises
+  exists: things/cannon
+  depends:
+    - humans
+  provides:
+    - loud_noises
 
 sergeant:
-    target: "things/sergeant"
-    actions:
-      - set_mtime
-    depends:
-      - humans
-    provides:
-      - staff
+  exists: things/sergeant
+  depends:
+    - humans
+  provides:
+    - staff
 
 bright_colors: {}
 
-
-# Our agencies and their important missions
-
 confuse_a_cat:
-    target: "things/confuse_a_cat"
-    actions:
-      - set_mtime
-    depends:
-      - cat
-      - stage
-      - cannon
-      - sergeant
-    provides:
-      - agency
-      - funny_things
-      - magic_tricks
-      - bright_colors
-      - surrealism
+  exists: things/confuse_a_cat
+  depends:
+    - cat
+    - stage
+    - cannon
+    - sergeant
+  provides:
+    - agency
+    - funny_things
+    - magic_tricks
+    - bright_colors
+    - surrealism
 
 cat_confusion:
-    depends:
-      - cat
-      - magic_tricks
-      - loud_noises
-    provides:
-      - surrealism
-      - confusion
+  depends:
+    - cat
+    - magic_tricks
+    - loud_noises
+  provides:
+    - surrealism
+    - confusion
 
 amaze_a_vole:
-    target: "things/amaze_a_vole"
-    depends:
-      - vole
-    provides:
-      - agency
-      - funny_things
-    actions:
-      - set_mtime
+  exists: things/amaze_a_vole
+  depends:
+    - animal
+  provides:
+    - agency
+    - funny_things
 
 stun_a_stoat:
-    target: "things/stun_a_stoat"
-    depends:
-      - stoat
-    provides:
-      - agency
-      - popped_balloon
-    actions:
-      - set_mtime
+  exists: things/stun_a_stoat
+  depends:
+    - stoat
+  provides:
+    - agency
+    - popped_balloon
 
 stoat_stunning:
-    depends:
-      - stoat
-      - noises
-      - funny_things
-    provides:
-      - confusion
+  depends:
+    - stoat
+    - noises
+    - funny_things
+  provides:
+    - confusion
 
 puzzle_a_puma:
-    target: "things/puzzle_a_puma"
-    depends:
-      - wild
-      - feline
-    provides:
-      - agency
-      - cannon
-      - funny_things
-    actions:
-      - set_mtime
+  exists: things/puzzle_a_puma
+  depends:
+    - wild
+    - feline
+  provides:
+    - agency
+    - cannon
+    - funny_things
 
 puma_puzzling:
-    depends:
-      - puma
-      - loud_noises
-      - funny_things
-    provides:
-      - confusion
+  depends:
+    - puma
+    - loud_noises
+    - funny_things
+  provides:
+    - confusion
 
 startle_a_thompsons_gazelle:
-    target: "things/startle_a_thompsons_gazelle"
-    depends:
-      - wild
-      - gazelle
-    provides:
-      - agency
-      - bright_colors
-      - funny_things
-      - noises
-    actions:
-      - set_mtime
+  exists: things/startle_a_thompsons_gazelle
+  depends:
+    - wild
+    - gazelle
+  provides:
+    - agency
+    - bright_colors
+    - funny_things
+    - noises
 
 bewilderbeest:
-    target: "things/bewilderbeest"
-    depends:
-      - wild
-      - mammal
-    provides:
-      - agency
-      - bright_colors
-      - funny_things
-      - noises
-    actions:
-      - set_mtime
+  exists: things/bewilderbeest
+  depends:
+    - wild
+    - mammal
+  provides:
+    - agency
+    - bright_colors
+    - funny_things
+    - noises
 
 distract_a_bee:
-    target: "things/distract_a_bee"
-    depends:
-      - insect
-    provides:
-      - agency
-      - bright_colors
-    actions:
-      - set_mtime
-
+  exists: things/distract_a_bee
+  depends:
+    - insect
+    - color_vision
+  provides:
+    - agency
+    - bright_colors
 
 clean_all:
-    target: "things/things"
-    clean: "rmrf things"
-    
+  actions:
+    - rm things

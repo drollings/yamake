@@ -1,10 +1,32 @@
+default:
+  depends:
+    - stock
+
+stock:
+  depends:
+    - edition
+  provides:
+    - base
+
+base:
+  depends:
+    - edition
+    
 ##############################################################################
 # One entry for stock install.  We'll see if next-gen needs another.
 ##############################################################################
+edition: {}
+
 goty:
   target: '%(GAME)s/bin/x64'
   provides:
-    - stock
+    - edition
+  clean:
+    - '%(GAMESPATH)s/game'
+    - '%(GAMESPATH)s/ScriptMerger'
+
+nextgen:
+  target: '%(GAME)s/bin/x64'
   clean:
     - '%(GAMESPATH)s/game'
     - '%(GAMESPATH)s/ScriptMerger'
@@ -19,6 +41,7 @@ goty:
 ghost_mode:
   target: '%(GAME)s/content/scripts/gm_generic.ws'
   depends:
+    - edition
     - community_patch_base
     - community_patch_imports
   provides:
@@ -28,9 +51,10 @@ ghost_mode:
 # merge target for w3ee-compatible mods.
 lazarus:
   target: '%(MODS)s/mod_W3EELazarusProject'
+  depends:
+    - edition
   provides:
     - base
-    - w3ee
     - lazaruslike
     - all_npc_scabbards
     - community_patch_base
@@ -43,11 +67,16 @@ lazarus:
     - swords_and_meditation
     - swords_on_roach
     - thoughtful_roach
+  layers:
+    - w3ee_493
+    - lazarus
 
 # All things compatible with w3ee 4.93 on can use this base, including w3ee_5
 # and lazarus.
 w3ee:
   target: '%(MODS)s/modW3EEMain'
+  depends:
+    - edition
   provides:
     - base
     - all_npc_scabbards
@@ -62,6 +91,8 @@ w3ee:
 # w3ee_5 into w3ee, above.
 w3ee_5:
   target: '%(MODS)s/modW3EE'
+  depends:
+    - edition
   provides:
     - base
     - w3ee
@@ -268,7 +299,7 @@ community_patch_base_stock:
 friendlyhud: {}
 friendlyhud_stock:
   depends:
-    - stock
+    - edition
     - community_patch_base
   provides:
     - friendlyhud
@@ -278,7 +309,7 @@ immersive_cam: {}
 immersive_cam_stock:
   target: '%(GAME)s/content/scripts/immersiveCamConfig.ws'
   depends:
-    - stock
+    - edition
   provides:
     - immersive_cam
 
@@ -290,7 +321,7 @@ modular_eyes: {}
 modular_eyes_stock:
   target: '%(DLC)s/dlcmodulareyes'
   depends:
-    - stock
+    - edition
   merges:
     - modular_eyes
   provides:
@@ -318,7 +349,7 @@ primal_needs: {}
 primal_needs_stock:
   target: '%(DLC)s/DLCwhatsfordinner'
   depends:
-    - stock
+    - edition
   provides:
     - primal_needs
   layers:

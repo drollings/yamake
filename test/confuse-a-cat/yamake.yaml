@@ -1,0 +1,359 @@
+# Confuse-A-Cat and all other terms specific to the Confuse A Cat sketch are
+# created by and copyrighted to Monty Python, and this like the rest of this
+# unit test should be taken very seriously.
+
+any:
+    actions:
+      - command: ls things
+
+default:
+    depends:
+      - cat
+      - confusion
+      - agency
+
+all:
+    depends:
+      - animal
+      - confusion
+
+confusion:
+    provides:
+      - base
+      - stock
+
+agency:
+    depends:
+      - staff
+      - animal
+      - confusion
+    
+# The traits
+
+wild:
+    depends:
+      - animal
+
+domesticated:
+    depends:
+      - animal
+      - humans
+
+hearing:
+    depends:
+      - cognitive
+      - noises
+
+cognitive:
+    depends:
+      - animal
+
+very_cognitive: 
+    provides:
+      - cognitive
+
+vision: {}
+
+color_vision:
+    depends:
+      - bright_colors
+    provides:
+      - vision
+
+# The kinds of critters
+
+animal: {}
+
+insect:
+    provides:
+      - animal
+      - cognitive
+
+reptile:
+    provides:
+      - animal
+      - cognitive
+
+# The critters
+
+jellyfish:
+    target: "things/jellyfish"
+    actions:
+      - touch
+    provides:
+      - animal
+
+bee:
+    target: "things/bee"
+    actions:
+      - touch
+    provides:
+      - insect
+      - color_vision
+
+mammal:
+    provides:
+      - animal
+      - cognitive
+      - hearing
+
+vole:
+    target: "things/vole"
+    actions:
+      - touch
+    provides:
+      - mammal
+
+feline:
+    provides:
+      - mammal
+
+cat:
+    target: "things/cat"
+    depends:
+      - humans
+    provides:
+      - very_cognitive
+      - feline
+    actions:
+      - touch
+
+cat_confusion:
+    depends:
+      - cat
+      - surrealism
+      - magic_tricks
+      - loud_noises
+    provides:
+      - confusion
+
+puma:
+    target: "things/puma"
+    provides:
+      - feline
+    actions:
+      - touch
+
+puma_puzzling:
+    depends:
+      - puma
+      - loud_noises
+      - funny_things
+    provides:
+      - confusion
+      
+stoat:
+    target: "things/stoat"
+    actions:
+      - touch
+    provides:
+      - mammal
+
+stoat_stunning:
+    depends:
+      - stoat
+      - noises
+      - funny_things
+    provides:
+      - confusion
+
+unicorn:
+    depends:
+      - noises
+      - funny_things
+    provides:
+      - mammal
+      
+gazelle:
+    target: "things/gazelle"
+    actions:
+      - touch
+    depends:
+      - noises
+    provides:
+      - mammal
+      
+wildebeest:
+    target: "things/wildebeest"
+    actions:
+      - touch
+    depends:
+      - loud_noises
+    provides:
+      - mammal
+
+
+# Our assets for confusing critters
+humans:
+    target: "things/humans"
+    actions:
+      - touch
+
+staff:
+    depends:
+      - humans
+
+stage_hands:
+    depends:
+      - staff
+
+stage:
+    target: "things/stage"
+    actions:
+      - touch
+    depends:
+      - stage_hands
+
+surrealism:
+    depends:
+      - very_cognitive
+    provides:
+      - confusion
+
+funny_things:
+    target: "things/funny_things"
+    actions:
+      - touch
+    depends:
+      - cognitive
+    provides:
+      - surrealism
+
+magic_tricks:
+    target: "things/magic_tricks"
+    actions:
+      - touch
+    provides:
+      - surrealism
+
+magical_confusion:
+    depends:
+      - cognitive
+      - vision
+      - magic_tricks
+    provides:
+      - confusion
+
+noises: {}
+
+loud_noises:
+    provides:
+      - noises
+
+popped_balloon:
+    target: "things/balloon"
+    actions:
+      - touch
+    provides:
+      - loud_noises
+
+cannon:
+    target: "things/cannon"
+    actions:
+      - touch
+    provides:
+      - loud_noises
+
+bright_colors: {}
+
+
+# Our agencies
+
+agency:
+    depends:
+      - staff
+
+confuse_a_cat:
+    target: "things/confuse_a_cat"
+    actions:
+      - touch
+    depends:
+      - cat
+      - stage
+      - cannon
+      - staff
+    provides:
+      - agency
+      - funny_things
+      - magic_tricks
+      - bright_colors
+
+amaze_a_vole:
+    target: "things/amaze_a_vole"
+    depends:
+      - vole
+    provides:
+      - agency
+      - staff
+      - funny_things
+    actions:
+      - touch
+
+stun_a_stoat:
+    target: "things/stun_a_stoat"
+    depends:
+      - stoat
+    provides:
+      - agency
+      - staff
+      - popped_balloon
+    actions:
+      - touch
+
+puzzle_a_puma:
+    target: "things/puzzle_a_puma"
+    depends:
+      - wild
+      - feline
+    provides:
+      - agency
+      - staff
+      - cannon
+      - funny_things
+    actions:
+      - touch
+
+startle_a_thompsons_gazelle:
+    target: "things/startle_a_thompsons_gazelle"
+    depends:
+      - wild
+      - gazelle
+    provides:
+      - agency
+      - staff
+      - bright_colors
+      - funny_things
+      - noises
+    actions:
+      - touch
+
+bewilderbeest:
+    target: "things/bewilderbeest"
+    depends:
+      - wild
+      - mammal
+    provides:
+      - agency
+      - staff
+      - bright_colors
+      - funny_things
+      - noises
+    actions:
+      - touch
+
+distract_a_bee:
+    target: "things/distract_a_bee"
+    depends:
+      - insect
+    provides:
+      - agency
+      - staff
+      - bright_colors
+    actions:
+      - touch
+
+
+clean_all:
+    target: "things/things"
+    clean: "rmrf things"
+    

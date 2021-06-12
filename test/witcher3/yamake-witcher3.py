@@ -12,10 +12,8 @@ from pathlib import Path
 def is_dir(arg):
     return os.path.exists(arg) and stat.S_ISDIR(os.stat(arg)[stat.ST_MODE])
 
-
+# The handler which implicitly initializes layers not already covered by the YAML
 def pluginInitialize(builder, Target):
-    # print()	# A friendly hello when you want to verify plugin load.
-
     # Now we read the layers folder for implicitly defined simple mods that we don't need dependency info for.
     # By default, layers with a dlc or mods folder are read as stock, with few depends
     if 'LAYERS' in builder.config and is_dir(builder.config['LAYERS']):

@@ -15,9 +15,11 @@ all:
 
 agency:
     depends:
-      - staff
+      - humans
       - animal
       - confusion
+    provides:
+      - staff
 
 confusion:
     provides:
@@ -64,7 +66,7 @@ animal: {}
 bee:
     target: "things/bee"
     actions:
-      - touch
+      - set_mtime
     provides:
       - insect
       - color_vision
@@ -74,10 +76,9 @@ cat:
     depends:
       - humans
     provides:
-      - very_cognitive
       - feline
     actions:
-      - touch
+      - set_mtime
 
 feline:
     provides:
@@ -86,7 +87,7 @@ feline:
 gazelle:
     target: "things/gazelle"
     actions:
-      - touch
+      - set_mtime
     provides:
       - mammal
       
@@ -98,7 +99,7 @@ insect:
 jellyfish:
     target: "things/jellyfish"
     actions:
-      - touch
+      - set_mtime
     provides:
       - animal
 
@@ -112,10 +113,9 @@ mammal:
 puma:
     target: "things/puma"
     provides:
-      - very_cognitive
       - feline
     actions:
-      - touch
+      - set_mtime
 
 reptile:
     provides:
@@ -125,7 +125,7 @@ reptile:
 stoat:
     target: "things/stoat"
     actions:
-      - touch
+      - set_mtime
     provides:
       - mammal
 
@@ -136,14 +136,14 @@ unicorn:
 vole:
     target: "things/vole"
     actions:
-      - touch
+      - set_mtime
     provides:
       - mammal
 
 wildebeest:
     target: "things/wildebeest"
     actions:
-      - touch
+      - set_mtime
     provides:
       - mammal
 
@@ -152,11 +152,12 @@ wildebeest:
 humans:
     target: "things/humans"
     actions:
-      - touch
+      - set_mtime
 
 staff:
     depends:
       - humans
+      - sergeant
 
 stage_hands:
     depends:
@@ -165,7 +166,7 @@ stage_hands:
 stage:
     target: "things/stage"
     actions:
-      - touch
+      - set_mtime
     depends:
       - stage_hands
 
@@ -178,16 +179,16 @@ surrealism:
 funny_things:
     target: "things/funny_things"
     actions:
-      - touch
+      - set_mtime
     depends:
       - cognitive
-    provides:
-      - surrealism
 
 magic_tricks:
     target: "things/magic_tricks"
     actions:
-      - touch
+      - set_mtime
+    depends:
+      - humans
     provides:
       - surrealism
 
@@ -208,48 +209,58 @@ loud_noises:
 popped_balloon:
     target: "things/balloon"
     actions:
-      - touch
+      - set_mtime
+    depends:
+      - humans
     provides:
       - loud_noises
 
 cannon:
     target: "things/cannon"
     actions:
-      - touch
+      - set_mtime
+    depends:
+      - humans
     provides:
       - loud_noises
+
+sergeant:
+    target: "things/sergeant"
+    actions:
+      - set_mtime
+    depends:
+      - humans
+    provides:
+      - staff
 
 bright_colors: {}
 
 
 # Our agencies and their important missions
 
-agency:
-    depends:
-      - staff
-
 confuse_a_cat:
     target: "things/confuse_a_cat"
     actions:
-      - touch
+      - set_mtime
     depends:
       - cat
       - stage
       - cannon
-      - staff
+      - sergeant
     provides:
       - agency
       - funny_things
       - magic_tricks
       - bright_colors
+      - surrealism
 
 cat_confusion:
     depends:
       - cat
-      - surrealism
       - magic_tricks
       - loud_noises
     provides:
+      - surrealism
       - confusion
 
 amaze_a_vole:
@@ -258,10 +269,9 @@ amaze_a_vole:
       - vole
     provides:
       - agency
-      - staff
       - funny_things
     actions:
-      - touch
+      - set_mtime
 
 stun_a_stoat:
     target: "things/stun_a_stoat"
@@ -269,10 +279,9 @@ stun_a_stoat:
       - stoat
     provides:
       - agency
-      - staff
       - popped_balloon
     actions:
-      - touch
+      - set_mtime
 
 stoat_stunning:
     depends:
@@ -289,11 +298,10 @@ puzzle_a_puma:
       - feline
     provides:
       - agency
-      - staff
       - cannon
       - funny_things
     actions:
-      - touch
+      - set_mtime
 
 puma_puzzling:
     depends:
@@ -310,12 +318,11 @@ startle_a_thompsons_gazelle:
       - gazelle
     provides:
       - agency
-      - staff
       - bright_colors
       - funny_things
       - noises
     actions:
-      - touch
+      - set_mtime
 
 bewilderbeest:
     target: "things/bewilderbeest"
@@ -324,12 +331,11 @@ bewilderbeest:
       - mammal
     provides:
       - agency
-      - staff
       - bright_colors
       - funny_things
       - noises
     actions:
-      - touch
+      - set_mtime
 
 distract_a_bee:
     target: "things/distract_a_bee"
@@ -337,10 +343,9 @@ distract_a_bee:
       - insect
     provides:
       - agency
-      - staff
       - bright_colors
     actions:
-      - touch
+      - set_mtime
 
 
 clean_all:

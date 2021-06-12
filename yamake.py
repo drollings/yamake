@@ -52,6 +52,10 @@ DEBUG = '[%sDEBUG%s]' % (MAG, NRM)
 INFO = '[%sINFO%s]' % (BLU, NRM)
 EXEC = '[%sEXEC%s]' % (CYN, NRM)
 START = '[%sSTART%s]' % (WHI, NRM)
+
+DIVIDER = '------------------------------------------------------------------------------'
+HASHDIVIDER = '##############################################################################'
+
  
 ############################################################
 # The Target class should match the functionality of a Makefile target, with
@@ -314,106 +318,115 @@ class Builder:
 
         lQueueSet = lTargetSet
         lAbstracts = set([t for t in lQueueSet if t.isAbstract()])
-        lNonAbstracts = lQueueSet - lAbstracts
-        lProvides = set(list(chain.from_iterable([t.provides for t in lNonAbstracts if t.provides])))
-        lDepends = set(list(chain.from_iterable([t.depends for t in lQueueSet if t.depends])))
+        lQueueSet -= lAbstracts
+        lProvides = set(list(chain.from_iterable([t.provides for t in lQueueSet if t.provides])))
+        lDepends = lAbstracts | set(list(chain.from_iterable([t.depends for t in lQueueSet if t.depends])))
 
-        lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends and t.dependenciesMet(lProvides)])))
-        lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
-        lP = set([t for t in lP if t.isAbstract() and t.dependenciesMet(lQueueSet | lProvides)])
+        lFullProvides = lQueueSet | lProvides
+        lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends and not t.isAbstract() and t.dependenciesMet(lFullProvides)])))
+        lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides and t.dependenciesMet(lFullProvides)])))
 
         print('lQueueSet', lQueueSet)
+        print('lAbstracts', lAbstracts)
         print('lDepends', lDepends)
         print('lProvides', lProvides)
         print('lD', lD)
         print('lP', lP)
 
         while (lP and lP != lProvides) or (lD and lD != lDepends):
-            print()
+            print('%-80.80s' % ('%-3.3s %s %s' % (DIVIDER, 'dependency resolution', DIVIDER)))
+            print('\tlD', lD)
+            print('\tlP', lP)
             while lP and lP != lProvides:
                 print('\tlP loop', lP)
                 lProvides |= lP
-                lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides and t.isAbstract() and t.dependenciesMet(lQueueSet | lProvides)])))
+                lFullProvides = lQueueSet | lProvides
+                lP = set(list(chain.from_iterable([t.provides for t in lFullProvides if t.provides and t.dependenciesMet(lFullProvides)])))
                 lP -= lProvides
             print('\tlP loop done', lP)
-            print('lProvides', lProvides)
-            
-            lDepends -= lProvides
+
+            lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides and t.dependenciesMet(lFullProvides)])))
+            lP -= lFullProvides
 
             while lD and lD != lDepends:
                 print('\tlD loop', lD)
                 lDepends |= lD
                 lDepends -= lProvides
-                lQueueSet |= set(list(chain.from_iterable([t.depends for t in lQueueSet if t.depends and t.dependenciesMet(lProvides)])))
+
+                lQueueSet |= set([t for t in lDepends if not t.isAbstract() and t.dependenciesMet(lFullProvides)])
+                lAbstracts = set([t for t in lQueueSet if t.isAbstract()])
+                lQueueSet -= lAbstracts
+                lProvides |= set(list(chain.from_iterable([t.provides for t in lQueueSet if t.provides])))
+                lFullProvides = lQueueSet | lProvides
+                lDepends |= lAbstracts | set(list(chain.from_iterable([t.depends for t in lQueueSet if t.depends])))
                 lDepends -= lQueueSet
-                lD = set(list(chain.from_iterable([t.depends for t in lQueueSet if t.depends])))
+
+                lD = set(list(chain.from_iterable([t.depends for t in lQueueSet if t.depends and not t.isAbstract() and t.dependenciesMet(lFullProvides)])))
                 lD -= lQueueSet
-                lD -= lProvides
+                lD -= lFullProvides
             print('\tlD loop done', lD)
+
+            lFullProvides = lQueueSet | lProvides
+            print()
+            print('lQueueSet', lQueueSet)
             print('lDepends', lDepends)
+            print('lFullProvides', lFullProvides)
+            print()
 
-
-            # lNonAbstracts = set([t for t in lDepends if not t.isAbstract()])
-            # if lNonAbstracts:
-            #     print("Merging non-abstract dependenciess", lNonAbstracts)
-            #     lQueueSet |= set([t for t in lNonAbstracts if t.depends is None or t.depends <= lProvides])
-            #     lP |= set(list(chain.from_iterable([t.provides for t in lQueueSet if t.provides and (t.depends == None or t.depends <= lQueueSet | lProvides)])))
-            #     lD |= set(list(chain.from_iterable([t.depends for t in lNonAbstracts if t.depends and t.depends <= lProvides])))
-            #     lDepends -= lQueueSet
-            
-            # print(pformat(self.base.__dict__))
-            print('Looping on lDepends', lDepends)
-            for lPP in [dProviders[d] for d in lDepends if d in dProviders]:
-                print('lPP', lPP)
-                lPP = [d for d in lPP if d.depends and d not in lQueueSet and d.depends <= lQueueSet | lProvides]
+            print('%-80.80s' % ('%-3.3s %s %s' % (DIVIDER, 'looping on lDepends', DIVIDER)))
+            for depend in [d for d in lDepends if d in dProviders]:
+                lPP = dProviders[depend]
+                print('\tlPP for %s: %s' % (depend.name, lPP))
+                lPP = [d for d in lPP if d.depends and d in lQueueSet or (d.nonAbstractDepends() & lFullProvides)]
                 if len(lPP) == 1:
                     target = lPP[0]
-                    print()
-                    print("\tFOUND", target.name)
-                    print()
+                    print('%-80.80s' % ('%-3.3s %sFOUND %s%s %s' % (DIVIDER, GRN, target.name, NRM, DIVIDER)))
                     lQueueSet.add(target)
-                    if target.provides:
-                        lP |= target.provides
-
-                    if target.depends:
-                        lD |= target.depends
-                    
-                    lD |= lDepends
-                    lD -= lQueueSet
-                    lD -= lProvides
-                else:
+                    lProvides |= set(list(chain.from_iterable([t.provides for t in lQueueSet if t.provides])))
+                    lFullProvides = lQueueSet | lProvides
+                    lAbstracts = set([t for t in lQueueSet if t.isAbstract()])
+                    lQueueSet -= lAbstracts
+                    lDepends |= lAbstracts | set(list(chain.from_iterable([t.depends for t in lQueueSet if t.depends])))
+                    lDepends -= lFullProvides
+                elif lPP:
                     print('Candidate lPP', lPP)
                         
+            lQueueSet |= set([t for t in lDepends if not t.isAbstract() and t.dependenciesMet(lFullProvides)])
+            lAbstracts = set([t for t in lQueueSet if t.isAbstract()])
+            lQueueSet -= lAbstracts
+            lProvides |= set(list(chain.from_iterable([t.provides for t in lQueueSet if t.provides])))
+            lFullProvides = lQueueSet | lProvides
+            lDepends |= lAbstracts | set(list(chain.from_iterable([t.depends for t in lQueueSet if t.depends])))
+            lDepends -= lFullProvides
+
+            lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends])))
+            lD -= lDepends
+            lD -= lFullProvides
+            lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides and t.dependenciesMet(lFullProvides)])))
+            lP -= lFullProvides
+
             print()                    
             print('lD', lD)
             print('lP', lP)
             print('lQueueSet', lQueueSet)
+            print('lAbstracts', lAbstracts)
             print('lProvides', lProvides)
             print('lDepends', lDepends)
 
-
-        
+        print('%-80.80s' % (DIVIDER))
+            
         print()
         print('lQueueSet', lQueueSet)
         print('lDepends', lDepends)
-        print('lProvides', lProvides)
         print()
-            
-        lQueue = set([t for t in lQueueSet if not t.isAbstract()])
-        lAmbiguous = lDepends | lQueueSet
-        lAmbiguous -= lQueue
         
-        if not lAmbiguous:
-            lQueue = self.buildDependencyDepths(lQueue, dProviders, dTimeStamps)
-            lQueue = list(chain.from_iterable(lQueue))
-        
-        return True, lQueue, lAmbiguous
+        return True, lQueueSet, lDepends
 
     ############################################################
     # Check a build dependency
     # Returns: True/False success code, list of string output
     def buildCLI(self, options, args, dProviders):
-        print('%-80.80s' % '################################################################################')
+        print('%-80.80s' % HASHDIVIDER)
         if len(args):
             lTargets = [self.index[i] for i in args if i in self.index]
             print("%-22s Attempting build from %s: %s" % (START, options.build, args))
@@ -439,7 +452,7 @@ class Builder:
         lOutput = []
 
         if len(lAmbiguous):
-            lOutput.append('%-80.80s' % '################################################################################')
+            lOutput.append('%-80.80s' % HASHDIVIDER)
             lOutput.append('%-22s Can not resolve for %s based on targets %s' % (ERROR, self.base.name, lTargets))
             lOutput.append('%-36s %s' % ('AMBIGUOUS', 'POTENTIALLY PROVIDED BY'))
             for t in lAmbiguous:
@@ -462,7 +475,7 @@ class Builder:
                 lOutput.append('%-36s %-40s %s' % (t.name, t.target, t.getLayers()))
             return False, lOutput
 
-        lOutput.append('%-80.80s' % '################################################################################')
+        lOutput.append('%-80.80s' % HASHDIVIDER)
         lOutput.append("%-22s %-22s %-28s %s" % (SUCCESS, "Build on %s" % self.base.name, "FILE/DIR", "LAYERS TO WRITE"))
         for t in lQueue:
             lOutput.append('%-34s %-28s %s' % (t.name, t.target, t.getLayers()))
@@ -539,6 +552,16 @@ class Target:
         if not self.depends or self.depends <= lProvideSet:
             return True
         return False
+    
+    def abstractDepends(self):
+        if not self.depends:
+            return set()
+        return set([d for d in self.depends if d.isAbstract()])
+    
+    def nonAbstractDepends(self):
+        if not self.depends:
+            return set()
+        return set([d for d in self.depends if not d.isAbstract()])
     
     def isAbstract(self):
         if self.target or self.actions or self.layers:

@@ -2,13 +2,9 @@
 # created by and copyrighted to Monty Python, and this like the rest of this
 # unit test should be taken very seriously.
 
-any:
-    actions:
-      - command: ls things
-
 default:
     depends:
-      - cat
+      - animal
       - confusion
       - agency
 
@@ -17,20 +13,21 @@ all:
       - animal
       - confusion
 
-confusion:
-    provides:
-      - base
-      - stock
-
 agency:
     depends:
       - staff
       - animal
       - confusion
+
+confusion:
+    provides:
+      - base
+      - stock
+
     
 # The traits
 
-wild:
+cognitive:
     depends:
       - animal
 
@@ -44,13 +41,13 @@ hearing:
       - cognitive
       - noises
 
-cognitive:
-    depends:
-      - animal
-
 very_cognitive: 
     provides:
       - cognitive
+
+wild:
+    depends:
+      - animal
 
 vision: {}
 
@@ -60,28 +57,9 @@ color_vision:
     provides:
       - vision
 
-# The kinds of critters
+# The critters, and categories of them
 
 animal: {}
-
-insect:
-    provides:
-      - animal
-      - cognitive
-
-reptile:
-    provides:
-      - animal
-      - cognitive
-
-# The critters
-
-jellyfish:
-    target: "things/jellyfish"
-    actions:
-      - touch
-    provides:
-      - animal
 
 bee:
     target: "things/bee"
@@ -90,23 +68,6 @@ bee:
     provides:
       - insect
       - color_vision
-
-mammal:
-    provides:
-      - animal
-      - cognitive
-      - hearing
-
-vole:
-    target: "things/vole"
-    actions:
-      - touch
-    provides:
-      - mammal
-
-feline:
-    provides:
-      - mammal
 
 cat:
     target: "things/cat"
@@ -118,30 +79,49 @@ cat:
     actions:
       - touch
 
-cat_confusion:
-    depends:
-      - cat
-      - surrealism
-      - magic_tricks
-      - loud_noises
+feline:
     provides:
-      - confusion
+      - mammal
+
+gazelle:
+    target: "things/gazelle"
+    actions:
+      - touch
+    provides:
+      - mammal
+      
+insect:
+    provides:
+      - animal
+      - cognitive
+
+jellyfish:
+    target: "things/jellyfish"
+    actions:
+      - touch
+    provides:
+      - animal
+
+mammal:
+    provides:
+      - animal
+      - cognitive
+      - hearing
+      - vision
 
 puma:
     target: "things/puma"
     provides:
+      - very_cognitive
       - feline
     actions:
       - touch
 
-puma_puzzling:
-    depends:
-      - puma
-      - loud_noises
-      - funny_things
+reptile:
     provides:
-      - confusion
-      
+      - animal
+      - cognitive
+
 stoat:
     target: "things/stoat"
     actions:
@@ -149,36 +129,21 @@ stoat:
     provides:
       - mammal
 
-stoat_stunning:
-    depends:
-      - stoat
-      - noises
-      - funny_things
-    provides:
-      - confusion
-
 unicorn:
-    depends:
-      - noises
-      - funny_things
     provides:
       - mammal
       
-gazelle:
-    target: "things/gazelle"
+vole:
+    target: "things/vole"
     actions:
       - touch
-    depends:
-      - noises
     provides:
       - mammal
-      
+
 wildebeest:
     target: "things/wildebeest"
     actions:
       - touch
-    depends:
-      - loud_noises
     provides:
       - mammal
 
@@ -226,7 +191,7 @@ magic_tricks:
     provides:
       - surrealism
 
-magical_confusion:
+magic_trick_confusion:
     depends:
       - cognitive
       - vision
@@ -257,7 +222,7 @@ cannon:
 bright_colors: {}
 
 
-# Our agencies
+# Our agencies and their important missions
 
 agency:
     depends:
@@ -277,6 +242,15 @@ confuse_a_cat:
       - funny_things
       - magic_tricks
       - bright_colors
+
+cat_confusion:
+    depends:
+      - cat
+      - surrealism
+      - magic_tricks
+      - loud_noises
+    provides:
+      - confusion
 
 amaze_a_vole:
     target: "things/amaze_a_vole"
@@ -300,6 +274,14 @@ stun_a_stoat:
     actions:
       - touch
 
+stoat_stunning:
+    depends:
+      - stoat
+      - noises
+      - funny_things
+    provides:
+      - confusion
+
 puzzle_a_puma:
     target: "things/puzzle_a_puma"
     depends:
@@ -312,6 +294,14 @@ puzzle_a_puma:
       - funny_things
     actions:
       - touch
+
+puma_puzzling:
+    depends:
+      - puma
+      - loud_noises
+      - funny_things
+    provides:
+      - confusion
 
 startle_a_thompsons_gazelle:
     target: "things/startle_a_thompsons_gazelle"

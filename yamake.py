@@ -413,14 +413,24 @@ class Builder:
     # Check a build dependency
     # Returns: True/False success code, list of string output
     def buildCLI(self, options, args, dProviders):
-        if not len(args):
-            if 'default' not in self.index:
-                return False, ['No targets given, and no default target present.']
-            args = self.index['default'].depends
-
         print('%-80.80s' % '################################################################################')
-        print("%-22s Attempting build from %s: %s" % (START, options.build, args))
-        lTargets = [self.index[i] for i in args if i in self.index]
+        if len(args):
+            lTargets = [self.index[i] for i in args if i in self.index]
+            print("%-22s Attempting build from %s: %s" % (START, options.build, args))
+        
+        else:
+            default = None
+            if 'default' in self.index:
+                default = self.index['default']
+                
+            if default and default.depends:
+                lTargets = default.depends
+                print("%-22s Attempting default build: %s" % (START, lTargets))
+            else:
+                print("No targets specified, no default in build file.")
+                return False, lOutput
+            
+
         result, lQueue, lAmbiguous = self.enqueue(lTargets, dProviders)
 
         if not result:

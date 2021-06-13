@@ -2,22 +2,29 @@
 default:
   depends:
     - stock
+    - goty
+
+any:
+  depends:
+    - edition
+    - base
+
+base:
+  essential: True
+
+edition:
+  essential: True
 
 stock:
+  essential: True
   depends:
     - edition
   provides:
     - base
 
-any:
-  depends:
-    - edition
-
 ##############################################################################
 # One entry for stock install.  We'll see if next-gen needs another.
 ##############################################################################
-edition: {}
-
 goty:
   exists: '%(GAME)s/bin/x64'
   provides:

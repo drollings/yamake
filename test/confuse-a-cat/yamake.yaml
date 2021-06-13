@@ -11,7 +11,14 @@ default:
 
 any:
   depends:
+    - animal
     - confusion
+
+animal:
+  essential: True
+
+confusion:
+  essential: True
 
 agency:
   depends:
@@ -21,10 +28,6 @@ agency:
     - staff
 
 # Traits like these are immaterial and only used for abstract matching.
-
-confusion:
-  provides:
-    - stock
 
 cognitive:
   depends:
@@ -54,14 +57,11 @@ color_vision:
   provides:
     - vision
 
-animal: {}
-
 bee:
   exists: things/bee
   provides:
     - insect
     - color_vision
-    - base
 
 cat:
   exists: things/cat
@@ -69,7 +69,6 @@ cat:
     - humans
   provides:
     - feline
-    - base
 
 feline:
   provides:
@@ -79,7 +78,6 @@ gazelle:
   exists: things/gazelle
   provides:
     - mammal
-    - base
     - wild
 
 insect:
@@ -104,7 +102,6 @@ puma:
   provides:
     - feline
     - wild
-    - base
 
 reptile:
   provides:
@@ -115,7 +112,6 @@ stoat:
   exists: things/stoat
   provides:
     - mammal
-    - base
 
 unicorn:
   provides:
@@ -125,13 +121,11 @@ vole:
   exists: things/vole
   provides:
     - mammal
-    - base
 
 wildebeest:
   exists: things/wildebeest
   provides:
     - mammal
-    - base
 
 humans:
   exists: things/humans
@@ -195,6 +189,7 @@ bright_colors:
 # These are generally confusing things.
 
 amazement:
+  essential: True
   depends:
     - animal
     - cognitive
@@ -222,6 +217,7 @@ puzzling:
     - hearing
     - vision
     - noises
+    - magic_tricks
     - funny_things
     - cognitive
     - agency
@@ -299,6 +295,8 @@ puzzle_a_puma:
   depends:
     - wild
     - feline
+    - magic_tricks
+    - noises
   provides:
     - agency
     - puzzling

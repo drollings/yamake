@@ -18,3 +18,8 @@ _deps
 Thumbs.db
 
 __pycache__
+
+
+# Added by cargo
+
+/target

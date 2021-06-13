@@ -341,8 +341,8 @@ class Builder:
         lDepends = lAbstracts | set(list(chain.from_iterable([t.depends for t in lQueueSet if t.depends])))
 
         lFullProvides = lQueueSet | lProvides
-        lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends or t.Depends() & lFullProvides])))
-        lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides and t.Depends() & lFullProvides])))
+        lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends])))
+        lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
 
         print('%-15.15s %s' % ('lQueueSet', lQueueSet))
         print('%-15.15s %s' % ('lAbstracts', lAbstracts))
@@ -351,11 +351,10 @@ class Builder:
         print('%-15.15s %s' % ('lD', lD))
         print('%-15.15s %s' % ('lP', lP))
 
-        while (lP and lP != lProvides) or (lD and lD != lDepends):
+        counter = 4
+        while lDepends or (lP and lP != lProvides) or (lD and lD != lDepends):
             print('%-80.80s' % ('%-3.3s %s %s' % (HASHDIVIDER, 'dependency resolution', HASHDIVIDER)))
-            print('\tlD', lD)
             print('\tlP', lP)
-            print()
             while lP and lP != lProvides:
                 print('\tlP loop', lP)
                 lProvides |= lP
@@ -363,69 +362,129 @@ class Builder:
                 lP = set(list(chain.from_iterable([t.provides for t in lFullProvides if t.provides and t.Depends() & lFullProvides])))
                 lP -= lProvides
             print('\tlP loop done', lP)
+            print('%-80.80s' % DIVIDER)
+            print('\tlD', lD)
+
+            lDepends -= lFullProvides
 
             while lD and lD != lDepends:
                 print('\tlD loop', lD)
                 lDepends |= lD
-                lQueueSet |= set([t for t in lDepends if t.depends is None or t.Depends() & lFullProvides])
-                lProvides |= set(list(chain.from_iterable([t.provides for t in lQueueSet if t.provides])))
-                lFullProvides = lQueueSet | lProvides
-                lDepends = set(list(chain.from_iterable([t.depends for t in lQueueSet if t.depends])))
-                lDepends -= lQueueSet
-
-                lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends is None or t.Depends() & lFullProvides])))
-                lD |= set(list(chain.from_iterable([t.depends for t in lDepends if t.depends and t.Depends() & lFullProvides])))
+                lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends is not None or t.Depends() & lFullProvides])))
                 lD -= lDepends
             print('\tlD loop done', lD)
+            print('%-80.80s' % DIVIDER)
 
             lFullProvides = lQueueSet | lProvides
-            print()
             print('%-15.15s %s' % ('lQueueSet', lQueueSet))
             print('%-15.15s %s' % ('lDepends', lDepends))
             print('%-15.15s %s' % ('lFullProvides', lFullProvides))
-            print()
 
-            print('%-80.80s' % ('%-3.3s %s %s' % (DIVIDER, 'looping on lDepends', DIVIDER)))
-            for depend in [d for d in lDepends if d in dProviders]:
-                lPP = dProviders[depend]
-                print('\tlPP for %s: %s' % (depend.name, lPP))
-                if len(lPP) == 1:
-                    target = lPP[0]
-                    print('%-80.80s' % ('%-3.3s %sFOUND %s%s %s' % (DIVIDER, GRN, target.name, NRM, DIVIDER)))
-                    lQueueSet.add(target)
-                    lProvides |= set(list(chain.from_iterable([t.provides for t in lQueueSet if t.provides])))
-                    lFullProvides = lQueueSet | lProvides
-                elif lPP:
-                    print('\tCandidate lPP', lPP)
+            print('%-15.15s %s' % ('lDepends - lAbstracts', lDepends - lAbstracts))
+            lAbstractDepends = set([t for t in lDepends if t.IsAbstract()])
+            if lAbstractDepends:
+                print('%-80.80s' % ('%-3.3s %s %s' % (DIVIDER, 'loop on lDepends', DIVIDER)))
+                for depend in [d for d in lDepends if d in dProviders]:
+                    target = None
+                    lPP = set(dProviders[depend])
+                    lTestSets = [
+                        lPP,
+                        lPP - lFullProvides,
+                        lPP - lAbstractDepends,
+                        lPP & lQueueSet,
+                        lPP & ((lProvides | lQueueSet) - lAbstracts),
+                        lPP - lAbstracts,
+                        lPP - (lAbstracts | lFullProvides) 
+                    ]
+
+                    for testSet in lTestSets:
+                        print('\tProvider candidates for %s: %s' % (depend.name, testSet))
+                        if len(testSet) == 1:
+                            target = list(testSet)[0]
+                            break
                         
-            lQueueSet |= set([t for t in lDepends if not t.IsAbstract() and (t.depends is None or t.Depends() & lFullProvides)])
-            lAbstracts = set([t for t in lQueueSet if t.IsAbstract()])
-            lQueueSet -= lAbstracts
-            lProvides |= set(list(chain.from_iterable([t.provides for t in lQueueSet if t.provides])))
-            lFullProvides = lQueueSet | lProvides
-            lDepends |= lAbstracts | set(list(chain.from_iterable([t.depends for t in lQueueSet if t.depends])))
-            lDepends -= lQueueSet
-
-            lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends and t.Depends() & lFullProvides])))
-            lD -= lDepends
-            lD -= lFullProvides
-            lP = set(list(chain.from_iterable([t.provides for t in lQueueSet if t.provides and (t.depends is None or t.Depends() & lFullProvides)])))
-            lP -= lProvides
+                    if not target:
+                        # Ooof.  We have to try even harder, pick through the non-abstract depends for each candidate.
+                        for pp in lPP:
+                            ppDepends = pp.Depends()
+                            ppNonAbstractDepends = set([t for t in ppDepends if not t.IsAbstract()])
+                            print('\tProvider candidate for %s: %s %s %s' % (depend.name, pp.name, ppDepends, ppNonAbstractDepends))
+                            if ppNonAbstractDepends & lQueueSet:
+                                target = pp
+                                break
+                            # if ppNonAbstractDepends & lFullProvides:
+                            #     target = pp
+                            #     break
+                            # if ppDepends & lQueueSet:
+                            #     target = pp
+                            #     break
+                            # if ppDepends & lFullProvides:
+                            #     target = pp
+                            #     break
+                    
+                    if target:
+                        print('%-80.80s' % ('%-3.3s %sFOUND %s%s %s' % (DIVIDER, GRN, target.name, NRM, DIVIDER)))
+                        lQueueSet.add(target)
+                        lFullProvides.add(target)
+                        if target in lDepends:
+                            lDepends.remove(target)
+                        if target.provides:
+                            lDepends -= target.provides
+                            lProvides |= target.provides
+                            lFullProvides |= target.provides
+                        lP.add(target)
+                        break
 
             print('%-80.80s' % DIVIDER)
-            print('%-15.15s %s' % ('lD', lD))
-            print('%-15.15s %s' % ('lP', lP))
+            
+            """
+            lAbstracts = set([t for t in lQueueSet if t.IsAbstract()])
+            lQueueSet -= lAbstracts
+            lDepends |= lAbstracts
+            lProvides |= set(list(chain.from_iterable([t.provides for t in lQueueSet if t.provides])))
+            lFullProvides |= lQueueSet | lProvides
+            lDepends -= lFullProvides
+
+            lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
+            lP -= lFullProvides
+            lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends])))
+            lD -= lFullProvides
+            """
+            
+            lAddDepends = set([t for t in lDepends if not t.IsAbstract() and t.Depends() <= lFullProvides])
+            if lAddDepends:
+                lQueueSet |= lAddDepends
+                lDepends -= lAddDepends
+                        
+            lAbstracts = set([t for t in lQueueSet | lDepends if t.IsAbstract()])
+            lQueueSet -= lAbstracts
+            lDepends |= lAbstracts | set(list(chain.from_iterable([t.depends for t in lQueueSet if t.depends])))
+            lDepends -= lFullProvides
+
+            lProvides |= set(list(chain.from_iterable([t.provides for t in lQueueSet if t.provides])))
+            lFullProvides |= lQueueSet | lProvides
+
+            # Make sure lD and lP are only holding things we haven't picked up yet.
+            lD |= set(list(chain.from_iterable([t.depends for t in lDepends if t.depends])))
+            lP |= set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
+            lP -= lFullProvides
+            lD -= lDepends
+            lD -= lFullProvides
+
+            print('%-80.80s' % (DIVIDER))
             print('%-15.15s %s' % ('lQueueSet', lQueueSet))
             print('%-15.15s %s' % ('lAbstracts', lAbstracts))
-            print('%-15.15s %s' % ('lProvides', lProvides))
             print('%-15.15s %s' % ('lDepends', lDepends))
+            print('%-15.15s %s' % ('lProvides', lProvides))
+            print('%-15.15s %s' % ('lD', lD))
+            print('%-15.15s %s' % ('lP', lP))
+            counter -= 1
+            if counter <= 0:
+                break
             
         print('%-80.80s' % (HASHDIVIDER))
-            
-        print()
         print('%-15.15s %s' % ('lQueueSet', lQueueSet))
         print('%-15.15s %s' % ('lDepends', lDepends))
-        print()
         
         return True, lQueueSet, lDepends
 

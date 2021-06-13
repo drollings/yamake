@@ -11,7 +11,6 @@ default:
 
 any:
   depends:
-    - animal
     - confusion
 
 agency:
@@ -156,30 +155,16 @@ funny_things:
 magic_tricks:
   exists: things/magic_tricks
   depends:
-    - humans
+    - staff
   provides:
     - surrealism
 
-magic_trick_confusion:
-  depends:
-    - cognitive
-    - vision
-    - magic_tricks
-  provides:
-    - confusion
 
 noises: {}
 
 loud_noises:
   provides:
     - noises
-
-popped_balloon:
-  exists: things/balloon
-  depends:
-    - humans
-  provides:
-    - loud_noises
 
 cannon:
   exists: things/cannon
@@ -197,6 +182,56 @@ sergeant:
 
 bright_colors: {}
 
+# These are generally confusing things.
+
+where_did_it_go:
+  depends:
+    - animal
+    - cognitive
+    - hearing
+    - noises
+    - magic_tricks
+  provides:
+    - confusion
+
+distraction:
+  depends:
+    - color_vision
+    - bright_colors
+  provides:
+    - confusion
+
+puzzling:
+  depends:
+    - animal
+    - hearing
+    - vision
+    - noises
+    - funny_things
+    - cognitive
+    - surrealism
+  provides:
+    - confusion
+
+startling:
+  depends:
+    - animal
+    - hearing
+    - noises
+  provides:
+    - confusion
+
+stunning:
+  depends:
+    - animal
+    - hearing
+    - loud_noises
+  provides:
+    - confusion
+
+
+# And now, our specific agencies!
+
 confuse_a_cat:
   exists: things/confuse_a_cat
   depends:
@@ -211,19 +246,10 @@ confuse_a_cat:
     - bright_colors
     - surrealism
 
-cat_confusion:
-  depends:
-    - cat
-    - magic_tricks
-    - loud_noises
-  provides:
-    - surrealism
-    - confusion
-
 amaze_a_vole:
   exists: things/amaze_a_vole
   depends:
-    - animal
+    - vole
   provides:
     - agency
     - funny_things
@@ -234,15 +260,7 @@ stun_a_stoat:
     - stoat
   provides:
     - agency
-    - popped_balloon
-
-stoat_stunning:
-  depends:
-    - stoat
-    - noises
-    - funny_things
-  provides:
-    - confusion
+    - stunning
 
 puzzle_a_puma:
   exists: things/puzzle_a_puma
@@ -250,17 +268,10 @@ puzzle_a_puma:
     - wild
     - feline
   provides:
+    - puzzling
     - agency
     - cannon
     - funny_things
-
-puma_puzzling:
-  depends:
-    - puma
-    - loud_noises
-    - funny_things
-  provides:
-    - confusion
 
 startle_a_thompsons_gazelle:
   exists: things/startle_a_thompsons_gazelle
@@ -272,6 +283,7 @@ startle_a_thompsons_gazelle:
     - bright_colors
     - funny_things
     - noises
+    - startling
 
 bewilderbeest:
   exists: things/bewilderbeest

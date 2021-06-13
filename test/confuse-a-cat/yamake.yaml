@@ -130,7 +130,7 @@ humans:
 staff:
   depends:
     - humans
-    - sergeant
+    - agency
 
 stage_hands:
   depends:
@@ -179,6 +179,7 @@ sergeant:
     - humans
   provides:
     - staff
+    - stage_hands
 
 bright_colors: {}
 

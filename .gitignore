@@ -1,1 +1,21 @@
+=======
+# This file is used to ignore files which are generated
+# ----------------------------------------------------------------------------
+
+
+# CMake
+_deps
+
+# Temporary files
+*~
+*.autosave
+*.orig
+*.rej
+
+# Directory files
+.directory
+.DS_Store
+.vscode
+Thumbs.db
+
 __pycache__

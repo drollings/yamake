@@ -1,0 +1,327 @@
+# Confuse-A-Cat and all other terms specific to the Confuse A Cat sketch are
+# created by and copyrighted to Monty Python, and this like the rest of the
+# unit test should be taken very seriously.
+---
+
+default:
+  depends:
+    - animal
+    - confusion
+    - agency
+
+any:
+  depends:
+    - animal
+    - confusion
+
+animal:
+  essential: True
+
+confusion:
+  essential: True
+
+agency:
+  depends:
+    - humans
+    - animal
+  provides:
+    - staff
+
+# Traits like these are immaterial and only used for abstract matching.
+
+cognitive:
+  depends:
+    - animal
+
+domesticated:
+  depends:
+    - animal
+    - humans
+
+hearing:
+  depends:
+    - cognitive
+    - noises
+
+very_cognitive:
+  provides:
+    - cognitive
+
+wild:
+  depends:
+    - animal
+
+vision: {}
+
+color_vision:
+  provides:
+    - vision
+
+bee:
+  exists: things/bee
+  provides:
+    - insect
+    - color_vision
+
+cat:
+  exists: things/cat
+  depends:
+    - humans
+  provides:
+    - feline
+
+feline:
+  provides:
+    - mammal
+
+gazelle:
+  exists: things/gazelle
+  provides:
+    - mammal
+    - wild
+
+insect:
+  provides:
+    - animal
+    - cognitive
+
+jellyfish:
+  exists: things/jellyfish
+  provides:
+    - animal
+
+mammal:
+  provides:
+    - animal
+    - cognitive
+    - hearing
+    - vision
+
+puma:
+  exists: things/puma
+  provides:
+    - feline
+    - wild
+
+reptile:
+  provides:
+    - animal
+    - cognitive
+
+stoat:
+  exists: things/stoat
+  provides:
+    - mammal
+
+unicorn:
+  provides:
+    - mammal
+
+vole:
+  exists: things/vole
+  provides:
+    - mammal
+
+wildebeest:
+  exists: things/wildebeest
+  provides:
+    - mammal
+
+humans:
+  exists: things/humans
+
+staff:
+  depends:
+    - humans
+    - agency
+
+stage_hands:
+  depends:
+    - staff
+
+stage:
+  exists: things/stage
+  depends:
+    - stage_hands
+
+surrealism:
+  depends:
+    - very_cognitive
+  provides:
+    - confusion
+
+funny_things:
+  exists: things/funny_things
+  depends:
+    - cognitive
+
+magic_tricks:
+  exists: things/magic_tricks
+  depends:
+    - staff
+  provides:
+    - surrealism
+
+noises: {}
+
+loud_noises:
+  provides:
+    - noises
+
+cannon:
+  exists: things/cannon
+  depends:
+    - humans
+  provides:
+    - loud_noises
+
+sergeant:
+  exists: things/sergeant
+  depends:
+    - humans
+  provides:
+    - staff
+    - stage_hands
+
+bright_colors:
+  exists: things/bright_colors
+
+# These are generally confusing things.
+
+amazement:
+  essential: True
+  depends:
+    - animal
+    - cognitive
+    - magic_tricks
+    - agency
+
+bewilderment:
+  depends:
+    - animal
+    - cognitive
+    - hearing
+    - noises
+    - agency
+
+distraction:
+  depends:
+    - animal
+    - color_vision
+    - bright_colors
+    - agency
+
+puzzling:
+  depends:
+    - animal
+    - hearing
+    - vision
+    - noises
+    - magic_tricks
+    - funny_things
+    - cognitive
+    - agency
+
+startling:
+  depends:
+    - animal
+    - hearing
+    - vision
+    - noises
+    - cognitive
+    - agency
+
+stunning:
+  depends:
+    - animal
+    - hearing
+    - vision
+    - loud_noises
+    - cognitive
+    - agency
+
+# And now, our specific agencies!
+
+confuse_a_cat:
+  exists: things/confuse_a_cat
+  depends:
+    - cat
+    - stage
+    - cannon
+    - sergeant
+    - funny_things
+    - magic_tricks
+    - bright_colors
+  provides:
+    - agency
+    - surrealism
+    - confusion
+
+amaze_a_vole:
+  exists: things/amaze_a_vole
+  depends:
+    - vole
+    - funny_things
+  provides:
+    - agency
+    - amazement
+    - confusion
+
+bewilderbeest:
+  exists: things/bewilderbeest
+  depends:
+    - mammal
+    - bright_colors
+    - funny_things
+    - wild
+    - bewilderment
+  provides:
+    - agency
+    - confusion
+
+distract_a_bee:
+  exists: things/distract_a_bee
+  depends:
+    - insect
+    - color_vision
+    - bright_colors
+  provides:
+    - agency
+    - distraction
+    - confusion
+
+puzzle_a_puma:
+  exists: things/puzzle_a_puma
+  depends:
+    - wild
+    - feline
+    - magic_tricks
+    - noises
+  provides:
+    - agency
+    - puzzling
+    - confusion
+
+startle_a_thompsons_gazelle:
+  exists: things/startle_a_thompsons_gazelle
+  depends:
+    - gazelle
+    - bright_colors
+    - funny_things
+  provides:
+    - agency
+    - startling
+    - confusion
+
+stun_a_stoat:
+  exists: things/stun_a_stoat
+  depends:
+    - stoat
+  provides:
+    - agency
+    - confusion
+    - stunning
+
+clean_all:
+  actions:
+    - rm things

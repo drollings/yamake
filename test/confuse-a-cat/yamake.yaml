@@ -23,7 +23,6 @@ agency:
 
 confusion:
   provides:
-    - base
     - stock
 
 cognitive:
@@ -61,6 +60,7 @@ bee:
   provides:
     - insect
     - color_vision
+    - base
 
 cat:
   exists: things/cat
@@ -68,6 +68,7 @@ cat:
     - humans
   provides:
     - feline
+    - base
 
 feline:
   provides:
@@ -77,6 +78,7 @@ gazelle:
   exists: things/gazelle
   provides:
     - mammal
+    - base
 
 insect:
   provides:
@@ -99,6 +101,8 @@ puma:
   exists: things/puma
   provides:
     - feline
+    - wild
+    - base
 
 reptile:
   provides:
@@ -109,6 +113,7 @@ stoat:
   exists: things/stoat
   provides:
     - mammal
+    - base
 
 unicorn:
   provides:
@@ -118,11 +123,13 @@ vole:
   exists: things/vole
   provides:
     - mammal
+    - base
 
 wildebeest:
   exists: things/wildebeest
   provides:
     - mammal
+    - base
 
 humans:
   exists: things/humans
@@ -224,7 +231,6 @@ startling:
 
 stunning:
   depends:
-    - animal
     - hearing
     - loud_noises
   provides:
@@ -255,13 +261,26 @@ amaze_a_vole:
     - agency
     - funny_things
 
-stun_a_stoat:
-  exists: things/stun_a_stoat
+bewilderbeest:
+  exists: things/bewilderbeest
   depends:
-    - stoat
+    - wild
+    - mammal
   provides:
     - agency
-    - stunning
+    - bright_colors
+    - funny_things
+    - noises
+
+distract_a_bee:
+  exists: things/distract_a_bee
+  depends:
+    - insect
+    - color_vision
+  provides:
+    - agency
+    - bright_colors
+    - distraction
 
 puzzle_a_puma:
   exists: things/puzzle_a_puma
@@ -286,25 +305,13 @@ startle_a_thompsons_gazelle:
     - noises
     - startling
 
-bewilderbeest:
-  exists: things/bewilderbeest
+stun_a_stoat:
+  exists: things/stun_a_stoat
   depends:
-    - wild
-    - mammal
+    - stoat
   provides:
     - agency
-    - bright_colors
-    - funny_things
-    - noises
-
-distract_a_bee:
-  exists: things/distract_a_bee
-  depends:
-    - insect
-    - color_vision
-  provides:
-    - agency
-    - bright_colors
+    - stunning
 
 clean_all:
   actions:

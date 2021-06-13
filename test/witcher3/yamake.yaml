@@ -54,6 +54,7 @@ lazarus:
   provides:
     - base
     - lazaruslike
+    - lazaruslike_lite
     - all_npc_scabbards
     - community_patch_base
     - community_patch_imports

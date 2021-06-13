@@ -332,7 +332,7 @@ class Builder:
                 self.baseFamily = base
             self.base = base
 
-        print('%-15.15s %s' % ('lTargetSet', lTargetSet))
+        # print('%-15.15s %s' % ('lTargetSet', lTargetSet))
 
         lQueueSet = lTargetSet
         lProvides = set(list(chain.from_iterable([t.provides for t in lQueueSet if t.provides])))
@@ -345,17 +345,17 @@ class Builder:
         lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends])))
         lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
 
-        print('%-15.15s %s' % ('lQueueSet', lQueueSet))
-        print('%-15.15s %s' % ('lAbstracts', lAbstracts))
-        print('%-15.15s %s' % ('lDepends', lDepends))
-        print('%-15.15s %s' % ('lProvides', lProvides))
+        # print('%-15.15s %s' % ('lQueueSet', lQueueSet))
+        # print('%-15.15s %s' % ('lAbstracts', lAbstracts))
+        # print('%-15.15s %s' % ('lDepends', lDepends))
+        # print('%-15.15s %s' % ('lProvides', lProvides))
         # print('%-15.15s %s' % ('lD', lD))
         # print('%-15.15s %s' % ('lP', lP))
 
-        counter = 5
+        counter = 10
         lAddToQueue = set()
         while lDepends or (lP and lP != lProvides) or (lD and lD != lDepends):
-            print('%-80.80s' % ('%-3.3s %s %s' % (HASHDIVIDER, 'dependency resolution', HASHDIVIDER)))
+            # print('%-80.80s' % ('%-3.3s %s %s' % (HASHDIVIDER, 'dependency resolution', HASHDIVIDER)))
             # print('\tlP', lP)
             while lP and lP != lProvides:
                 # print('\tlP loop', lP)
@@ -388,13 +388,13 @@ class Builder:
                 for depend in [d for d in lAbstractDepends if d in dProviders]:
                     target = None
                     lPP = set(dProviders[depend])
-                    print('\tProvider candidates for %s: %s' % (depend.name, lPP))
+                    # print('\tProvider candidates for %s: %s' % (depend.name, lPP))
                     lTestSets = [
+                        lPP & lQueueSet,
+                        lPP & ((lProvides | lQueueSet) - lAbstracts),
                         lPP,
                         lPP - lFullProvides,
                         lPP - lAbstractDepends,
-                        lPP & lQueueSet,
-                        lPP & ((lProvides | lQueueSet) - lAbstracts),
                         lPP - lAbstracts,
                         lPP - (lAbstracts | lFullProvides) 
                     ]
@@ -425,19 +425,19 @@ class Builder:
                                 break
                     
                     if target:
-                        print('%-7.7s %sFOUND %s%s' % (SPACES, GRN, target.name, NRM))
+                        print('%-7.7s %sFOUND %s to resolve %s%s' % (SPACES, GRN, target.name, depend.name, NRM))
                         lAddToQueue.add(target)
                         lProvides.add(depend)
                         lFullProvides.add(depend)
                         lDepends.remove(depend)
                         break
 
-            print('%-80.80s' % DIVIDER)
+            # print('%-80.80s' % DIVIDER)
             
             lAddToQueue |= set([t for t in lDepends if not t.IsAbstract() and t.Depends() <= lFullProvides])
             
             if lAddToQueue:
-                print('%-15.15s %s' % ('lAddToQueue', lAddToQueue))
+                # print('%-15.15s %s' % ('lAddToQueue', lAddToQueue))
                 lQueueSet |= lAddToQueue
                 # lDepends |= lAbstracts | set(list(chain.from_iterable([t.depends for t in lQueueSet if t.depends])))
 
@@ -460,20 +460,20 @@ class Builder:
             lD -= lDepends
             lD -= lFullProvides
 
-            print('%-80.80s' % (DIVIDER))
-            print('%-15.15s %s' % ('lQueueSet', lQueueSet))
+            # print('%-80.80s' % (DIVIDER))
+            # print('%-15.15s %s' % ('lQueueSet', lQueueSet))
             # print('%-15.15s %s' % ('lAbstracts', lAbstracts))
-            print('%-15.15s %s' % ('lDepends', lDepends))
-            print('%-15.15s %s' % ('lProvides', lProvides))
+            # print('%-15.15s %s' % ('lDepends', lDepends))
+            # print('%-15.15s %s' % ('lProvides', lProvides))
             # print('%-15.15s %s' % ('lD', lD))
             # print('%-15.15s %s' % ('lP', lP))
             counter -= 1
             if counter <= 0:
                 break
             
-        print('%-80.80s' % (HASHDIVIDER))
-        print('%-15.15s %s' % ('lQueueSet', lQueueSet))
-        print('%-15.15s %s' % ('lDepends', lDepends))
+        # print('%-80.80s' % (HASHDIVIDER))
+        # print('%-15.15s %s' % ('lQueueSet', lQueueSet))
+        # print('%-15.15s %s' % ('lDepends', lDepends))
         
         return True, lQueueSet, lDepends
 

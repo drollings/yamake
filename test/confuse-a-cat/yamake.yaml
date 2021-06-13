@@ -17,9 +17,10 @@ agency:
   depends:
     - humans
     - animal
-    - confusion
   provides:
     - staff
+
+# Traits like these are immaterial and only used for abstract matching.
 
 confusion:
   provides:
@@ -79,6 +80,7 @@ gazelle:
   provides:
     - mammal
     - base
+    - wild
 
 insect:
   provides:
@@ -166,7 +168,6 @@ magic_tricks:
   provides:
     - surrealism
 
-
 noises: {}
 
 loud_noises:
@@ -188,26 +189,32 @@ sergeant:
     - staff
     - stage_hands
 
-bright_colors: {}
+bright_colors:
+  exists: things/bright_colors
 
 # These are generally confusing things.
 
-where_did_it_go:
+amazement:
+  depends:
+    - animal
+    - cognitive
+    - magic_tricks
+    - agency
+
+bewilderment:
   depends:
     - animal
     - cognitive
     - hearing
     - noises
-    - magic_tricks
-  provides:
-    - confusion
+    - agency
 
 distraction:
   depends:
+    - animal
     - color_vision
     - bright_colors
-  provides:
-    - confusion
+    - agency
 
 puzzling:
   depends:
@@ -217,25 +224,25 @@ puzzling:
     - noises
     - funny_things
     - cognitive
-    - surrealism
-  provides:
-    - confusion
+    - agency
 
 startling:
   depends:
     - animal
     - hearing
+    - vision
     - noises
-  provides:
-    - confusion
+    - cognitive
+    - agency
 
 stunning:
   depends:
+    - animal
     - hearing
+    - vision
     - loud_noises
-  provides:
-    - confusion
-
+    - cognitive
+    - agency
 
 # And now, our specific agencies!
 
@@ -246,41 +253,46 @@ confuse_a_cat:
     - stage
     - cannon
     - sergeant
-  provides:
-    - agency
     - funny_things
     - magic_tricks
     - bright_colors
+  provides:
+    - agency
     - surrealism
+    - confusion
 
 amaze_a_vole:
   exists: things/amaze_a_vole
   depends:
     - vole
+    - funny_things
   provides:
     - agency
-    - funny_things
+    - amazement
+    - confusion
 
 bewilderbeest:
   exists: things/bewilderbeest
   depends:
-    - wild
     - mammal
-  provides:
-    - agency
     - bright_colors
     - funny_things
-    - noises
+    - wild
+    - bewilderment
+  provides:
+    - agency
+    - confusion
 
 distract_a_bee:
   exists: things/distract_a_bee
   depends:
     - insect
     - color_vision
+    - bright_colors
   provides:
     - agency
-    - bright_colors
     - distraction
+    - confusion
 
 puzzle_a_puma:
   exists: things/puzzle_a_puma
@@ -288,22 +300,20 @@ puzzle_a_puma:
     - wild
     - feline
   provides:
-    - puzzling
     - agency
-    - cannon
-    - funny_things
+    - puzzling
+    - confusion
 
 startle_a_thompsons_gazelle:
   exists: things/startle_a_thompsons_gazelle
   depends:
-    - wild
     - gazelle
-  provides:
-    - agency
     - bright_colors
     - funny_things
-    - noises
+  provides:
+    - agency
     - startling
+    - confusion
 
 stun_a_stoat:
   exists: things/stun_a_stoat
@@ -311,6 +321,7 @@ stun_a_stoat:
     - stoat
   provides:
     - agency
+    - confusion
     - stunning
 
 clean_all:

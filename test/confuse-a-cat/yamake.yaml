@@ -35,6 +35,7 @@ agency:
     - staff
 
 humans:
+  essential: True
   exists: things/humans
 
 staff:
@@ -147,11 +148,14 @@ wildebeest:
 # The assets, material or not.
 
 stage_hands:
+  exists: things/stage_hands
+  check_mtime: True
   depends:
     - staff
 
 stage:
   exists: things/stage
+  check_mtime: True
   depends:
     - stage_hands
 
@@ -168,6 +172,7 @@ funny_things:
 
 magic_tricks:
   exists: things/magic_tricks
+  check_mtime: True
   depends:
     - staff
   provides:
@@ -333,6 +338,7 @@ stun_a_stoat:
     - confusion
     - stunning
 
+# Any command action is potentially platform-dependent.
 clean_all:
   actions:
-    - rm things
+    - command: rm -rf things

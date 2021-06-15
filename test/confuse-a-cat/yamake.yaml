@@ -1,6 +1,13 @@
 # Confuse-A-Cat and all other terms specific to the Confuse A Cat sketch are
 # created by and copyrighted to Monty Python, and this like the rest of the
 # unit test should be taken very seriously.
+
+# The must-have targets of any build are labelled essential: True, and are
+# abstract targets here.  Animal and confusion targets should be met by any
+# normal build command apart from clean commands.
+
+# The default target equates to "all" in Makefiles.
+
 ---
 
 default:
@@ -26,6 +33,15 @@ agency:
     - animal
   provides:
     - staff
+
+humans:
+  essential: True
+  exists: things/humans
+
+staff:
+  depends:
+    - humans
+    - agency
 
 # Traits like these are immaterial and only used for abstract matching.
 
@@ -56,6 +72,8 @@ vision: {}
 color_vision:
   provides:
     - vision
+
+# The animals we have got to confuse
 
 bee:
   exists: things/bee
@@ -127,20 +145,17 @@ wildebeest:
   provides:
     - mammal
 
-humans:
-  exists: things/humans
-
-staff:
-  depends:
-    - humans
-    - agency
+# The assets, material or not.
 
 stage_hands:
+  exists: things/stage_hands
+  check_mtime: True
   depends:
     - staff
 
 stage:
   exists: things/stage
+  check_mtime: True
   depends:
     - stage_hands
 
@@ -157,6 +172,7 @@ funny_things:
 
 magic_tricks:
   exists: things/magic_tricks
+  check_mtime: True
   depends:
     - staff
   provides:
@@ -322,6 +338,7 @@ stun_a_stoat:
     - confusion
     - stunning
 
+# Any command action is potentially platform-dependent.
 clean_all:
   actions:
-    - rm things
+    - command: rm -rf things

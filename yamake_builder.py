@@ -67,12 +67,9 @@ class Builder:
         self.lTargets = []
         self.index = {}
         self.config = {}
-        self.base = None
         self.baseFamily = None
-        self.stock = None
-        self.lBases = []
-        self.lStocks = []
-        self.dBasesToFamilies = {}
+        self.lEssentials = set()
+        self.dEssentialsToFamilies = defaultdict(Target, {})
         self.plugin = None
 
     def _initConfig(self, sConfigFile=None):
@@ -122,26 +119,26 @@ class Builder:
         if self.plugin and 'pluginFinalize' in self.plugin.__dict__:
             self.plugin.pluginFinalize(Target)
 
-        base = self.index['base']
-        self.lBases = set([t for t in self.lTargets if t is base or (t.provides and base in t.provides)])
-        stock = self.index['stock']
-        self.lStocks = set([t for t in self.lTargets if t is stock or (t.provides and stock in t.provides)])
+        # base = self.index['base']
+        # self.lBases = set([t for t in self.lTargets if t is base or (t.provides and base in t.provides)])
+        # stock = self.index['stock']
+        # self.lStocks = set([t for t in self.lTargets if t is stock or (t.provides and stock in t.provides)])
 
         # stock = self.index['stock']
         # self.lStocks = [t for t in self.lTargets if t is stock or stock in t.provides]
 
         # Create a dictionary mapping bases to baseFamilies
-        dBasesToFamilies = self.dBasesToFamilies
-        lBases = self.lBases
-        for b in lBases:
+        dEssentialsToFamilies = self.dEssentialsToFamilies
+        lEssentials = self.lEssentials
+        for b in lEssentials:
             baseFamily = b
-            lProvidedBases = None
+            lProvidedEssentials = None
             if b.provides:
-                lProvidedBases = [t for t in b.provides if t != base and t in lBases]
-            while lProvidedBases:
-                baseFamily = lProvidedBases[0]
-                lProvidedBases = [t for t in baseFamily.provides if t != base and t in lBases]
-            dBasesToFamilies[b] = baseFamily
+                lProvidedEssentials = [t for t in b.provides if t != base and t in lEssentials]
+            while lProvidedEssentials:
+                baseFamily = lProvidedEssentials[0]
+                lProvidedEssentials = [t for t in baseFamily.provides if t != base and t in lEssentials]
+            dEssentialsToFamilies[b] = baseFamily
 
         dProviders = defaultdict(set)
 
@@ -149,12 +146,12 @@ class Builder:
             # Ensure sane assignments of base and baseFamily
             lDepends = []
             if t.depends:
-                lDepends = [depend for depend in t.depends if depend in self.lBases]
+                lDepends = [depend for depend in t.depends if depend in self.lEssentials]
             if len(lDepends) > 1:
                 raise SyntaxError("Target %s has multiple bases: %s" % (t.name, t.depends)).with_traceback(sys.exc_info()[2])
             elif len(lDepends) == 1:
                 t.base = lDepends[0]
-                t.baseFamily = dBasesToFamilies[t.base]
+                t.baseFamily = dEssentialsToFamilies[t.base]
 
             # Check for any cyclic dependencies
             lDepends = t.depends
@@ -203,9 +200,8 @@ class Builder:
     def JSONOutput(self):
         import json
 
-        print("{")
-        lOutput = []
-        lSaved = ('target', 'layers', 'depends', 'provides', 'clean', 'build')
+        lOutput = ["{"]
+        lSaved = ('target', 'layers', 'depends', 'provides', 'clean', 'actions', 'essential', 'check_mtime')
 
         for target in self.lTargets:
             # if target.name in ('base', 'stock'):
@@ -213,9 +209,8 @@ class Builder:
             d = {k: v for (k, v) in target.__dict__.items() if k in lSaved and v}
             lOutput.append('\t"%s": %s' % (target.name, json.dumps(d)))
 
-        print(',\n'.join(lOutput))
-
-        print("}")
+        lOutput.append("}")
+        return lOutput
 
     ######################################################################
     # For our purposes, we need only get the dependency depth, and build each
@@ -256,7 +251,7 @@ class Builder:
     # a list of ambiguous targets if any
     def Enqueue(self, lTargets, dProviders):
         dTimeStamps = defaultdict(float)
-        [t.CheckTimeStamp(dTimeStamps) for t in self.lTargets]
+        [t.CheckTimeStamp(self, dTimeStamps) for t in self.lTargets]
         
         if not lTargets:
             default = None
@@ -267,7 +262,6 @@ class Builder:
                 lTargets = default.depends
                 # print("%-26.26s Attempting default build: %s" % (START, lTargets))
             else:
-                print("No targets specified, no default in build file.")
                 return False, lOutput
 
         lTargetSet = set(lTargets)
@@ -275,62 +269,54 @@ class Builder:
         if 'any' in self.index and self.index['any'].depends:
             lTargetSet |= self.index['any'].depends
 
-        stock = self.index['stock']
-        lPossibleStocks = self.lStocks
-        lStocks = [t for t in lPossibleStocks if (t in dTimeStamps or t in lTargets)]
-        if len(lStocks) != 1:
-            if len(lStocks) > 1:
-                raise SyntaxError("You can't specify more than one stock! %s" % lStocks).with_traceback(sys.exc_info()[2])
-            elif not lStocks:
-                if len(lPossibleStocks) != 1:
-                    raise SyntaxError("You must specify a stock target: %s" % lPossibleStocks).with_traceback(sys.exc_info()[2])
+        """
+        essential = self.index['essential']
+        lPossibleEssentials = self.lEssentials
+        lEssentials = [t for t in lPossibleEssentials if (t in dTimeStamps or t in lTargets)]
+        if len(lEssentials) != 1:
+            if len(lEssentials) > 1:
+                raise SyntaxError("You can't specify more than one essential! %s" % lEssentials).with_traceback(sys.exc_info()[2])
+            elif not lEssentials:
+                if len(lPossibleEssentials) != 1:
+                    raise SyntaxError("You must specify a essential target: %s" % lPossibleEssentials).with_traceback(sys.exc_info()[2])
                 else:
-                    stock = list(lPossibleStocks)[0]
-        elif not lPossibleStocks:
-            raise SyntaxError("No target provides 'stock'").with_traceback(sys.exc_info()[2])
-
-        if self.plugin and 'PluginChooseBase' in self.plugin.__dict__:
-            if not self.plugin.PluginChooseBase(self, lTargets):
-                print("No valid base selected in plugin.", self.lBases)
-                return False, None, None
-
-        if self.plugin and 'PluginChooseStock' in self.plugin.__dict__:
-            if not self.plugin.PluginChooseStock(self, lTargets):
-                print("No valid stock selected in plugin.", self.lBases)
-                return False, None, None
+                    essential = list(lPossibleEssentials)[0]
+        elif not lPossibleEssentials:
+            raise SyntaxError("No target provides 'essential'").with_traceback(sys.exc_info()[2])
 
         # print('TARGETS:', lTargetSet)
         # print('TIMESTAMPS', dTimeStamps)
 
-        if self.base is None:
-            lBases = [t for t in self.lBases if t in dTimeStamps or t in lTargetSet]
-            if len(lBases) > 1:
-                print("Error attempting to use multiple bases: %s." % lBases)
-                lExistingBases = [t for t in self.lBases if t in dTimeStamps]
-                if not lExistingBases:
-                    print("No extant bases out of %s " % lBases)
+        if self.essential is None:
+            lEssentials = [t for t in self.lEssentials if t in dTimeStamps or t in lTargetSet]
+            if len(lEssentials) > 1:
+                print("Error attempting to use multiple essentials: %s." % lEssentials)
+                lExistingEssentials = [t for t in self.lEssentials if t in dTimeStamps]
+                if not lExistingEssentials:
+                    print("No extant essentials out of %s " % lEssentials)
                     return False, None, None
-                if len(lExistingBases) == 1:
-                    print("%s is already installed as a base." % lExistingBases[0].name)
+                if len(lExistingEssentials) == 1:
+                    print("%s is already installed as a essential." % lExistingEssentials[0].name)
                 else:
-                    print("Error attempting to use multiple bases: %s." % lExistingBases)
+                    print("Error attempting to use multiple essentials: %s." % lExistingEssentials)
                     return False, None, None
-            elif not len(lBases):
-                if len(self.lBases) == 1:
-                    self.base = self.lBases[0]
+            elif not len(lEssentials):
+                if len(self.lEssentials) == 1:
+                    self.essential = list(self.lEssentials)[0]
                 else:
-                    print("No valid base selected out of", lBases, self.lBases)
+                    print("No valid essential selected out of", lEssentials, self.lEssentials)
                     return False, None, None
             else:
-                self.base = lBases[0]
+                self.essential = lEssentials[0]
 
-        if self.baseFamily is None:
-            base = self.base
-            if base in self.dBasesToFamilies:
-                self.baseFamily = self.dBasesToFamilies[base]
+        if self.essentialFamily is None:
+            essential = self.essential
+            if essential in self.dEssentialsToFamilies:
+                self.essentialFamily = self.dEssentialsToFamilies[essential]
             else:
-                self.baseFamily = base
-            self.base = base
+                self.essentialFamily = essential
+            self.essential = essential
+        """
 
         # print('%-15.15s %s' % ('lTargetSet', lTargetSet))
 
@@ -383,6 +369,7 @@ class Builder:
 
             # print('%-15.15s %s' % ('lDepends - lAbstracts', lDepends - lAbstracts))
             lAbstractDepends = set([t for t in lDepends if t.IsAbstract()])
+            lFoundTargets = set()
             if lAbstractDepends:
                 # print('--- loop on lAbstractDepends %s' % lAbstractDepends)
                 for depend in [d for d in lAbstractDepends if d in dProviders]:
@@ -425,12 +412,16 @@ class Builder:
                                 break
                     
                     if target:
-                        print('%-7.7s %sFOUND %s to resolve %s%s' % (SPACES, GRN, target.name, depend.name, NRM))
-                        lAddToQueue.add(target)
+                        lFoundTargets.add(target)
+                        
+                if lFoundTargets:
+                    if len(lFoundTargets) == 1:
+                        # print('%-7.7s %sFOUND %s to resolve %s%s' % (SPACES, GRN, list(lFoundTargets)[0].name, depend.name, NRM))
+                        lAddToQueue |= lFoundTargets
                         lProvides.add(depend)
                         lFullProvides.add(depend)
                         lDepends.remove(depend)
-                        break
+
 
             # print('%-80.80s' % DIVIDER)
             
@@ -477,54 +468,6 @@ class Builder:
         
         return True, lQueueSet, lDepends
 
-    ############################################################
-    # Check a build dependency
-    # Returns: True/False success code, list of string output
-    def BuildCLI(self, options, args, dProviders):
-        print('%-80.80s' % HASHDIVIDER)
-        lTargets = None
-        if len(args):
-            lTargets = [self.index[i] for i in args if i in self.index]
-            print("%-22s Attempting build from %s: %s" % (START, options.build, args))
-        
-        result, lQueue, lAmbiguous = self.Enqueue(lTargets, dProviders)
-
-        if not result:
-            return False, []
-
-        lOutput = []
-
-        if len(lAmbiguous):
-            lOutput.append('%-80.80s' % HASHDIVIDER)
-            lOutput.append('%-26s Can not resolve for %s based on targets %s\n' % (ERROR, self.base.name, lTargets))
-            lOutput.append('%-36s %s' % ('AMBIGUOUS', 'POTENTIALLY PROVIDED BY'))
-            for t in lAmbiguous:
-                lProviders = []
-                if t in dProviders:
-                    lProviders = [p.name for p in dProviders[t]]
-                    lProviders.sort()
-                sCause = ''
-                if len(lProviders):
-                    lProviders.sort()
-                    sCause = ', '.join(lProviders)
-                elif not t.exists and not t.actions:
-                    sCause = 'No target, no possible providers'
-                lOutput.append('%-36s %s' % (t.name, sCause))
-
-            lOutput.append('\n%-22s %s' % (INFO, 'DISAMBIGUATED'))
-            for t in lQueue:
-                if not t.exists:
-                    continue
-                lOutput.append('%-36s %-40s %s' % (t.name, t.exists, t.GetLayers()))
-            return False, lOutput
-
-        lOutput.append('%-80.80s' % HASHDIVIDER)
-        lOutput.append("%-22s %-22s %-28s %s" % (SUCCESS, "Build on %s" % self.base.name, "FILE/DIR", "LAYERS TO WRITE"))
-        for t in lQueue:
-            lOutput.append('%-34s %-28s %s' % (t.name, t.exists, t.GetLayers()))
-
-        return True, lOutput
-
 
 # The Target class provides a target build layer or condition.
 # It supplies depends and provides, and the sum of the depends
@@ -544,8 +487,8 @@ class Target:
         builder.lTargets.append(self)
 
         self.exists = None
-        self.base = None
-        self.baseFamily = None
+        self.essentials = set()
+        self.essentialFamily = defaultdict(dict)
         self.depends = None
         self.provides = None
         self.layers = None
@@ -578,13 +521,13 @@ class Target:
             return [self.name]
         return self.layers
 
-    def CheckTimeStamp(self, dTimeStamps):
+    def CheckTimeStamp(self, builder, dTimeStamps):
         if self.exists:
             fileentry = self.exists % builder.config
             # print("Checking existence of", fileentry, "for", self.name)
             if os.path.exists(fileentry):
                 # print ("%s exists" % (fileentry))
-                if self.check_mtime:
+                if self.mtime:
                     dTimeStamps[self] = os.stat(fileentry).st_mtime
                 else:
                     dTimeStamps[self] = 1.0
@@ -616,132 +559,3 @@ class Target:
             
     
 
-    # TODO - this is the nasty, brute-force version of what has to happen.
-    # Clean this up!
-    def AttemptQueue(self, builder, dProviders, dTimeStamps, dDependencyMap, priority, lStack=None):
-        bQueue = True
-        base = builder.base
-        bp = builder.base.provides
-        stock = builder.stock
- 
-        lProviders = []
-        if self in dProviders:
-            lProviders = [p for p in dProviders[self] if p.base is None or p.base == base or p.base in bp]
-
-        if len(lProviders) >= 1:
-            lP = [p for p in lProviders if p.base == base]
-            if len(lP) == 1:
-                lProviders = lP
-
-        if len(lProviders) >= 1:
-            lP = [p for p in lProviders if p.base in bp]
-            if len(lP) == 1:
-                lProviders = lP
-
-        if lStack is None:
-            lStack = [self]
-        elif self in lStack:
-            # recursive checks of abstract targets should not loop
-            return priority
-        elif not self.exists:
-            lStack = lStack + [self]
-
-        if len(lProviders) == 0 and self.exists is None and self.depends:
-            # Aha, an abstract target with dependencies!  This is our duck-typing use case.
-            for dep in self.depends:
-                dep.attemptQueue(builder, dProviders, dTimeStamps, dDependencyMap, priority + 1, lStack)
-            bQueue = False
-
-        elif len(lProviders) == 1:
-            bQueue = False
-            p = lProviders[0]
-            if p in builder.lStocks:
-                builder.stock = p
-
-            if p != self:
-                p.attemptQueue(builder, dProviders, dTimeStamps, dDependencyMap, priority + 1, lStack)
-            else:
-                # This strange case is reached when an ambiguous target
-                # provides itself, but this is because they might need to be
-                # listed along with other potential providers
-
-                for dep in p.depends:
-                    if dep == self:
-                        continue
-                    dep.attemptQueue(builder, dProviders, dTimeStamps, dDependencyMap, priority + 1, lStack)
-
-        elif self.depends is not None:
-            for dep in self.depends:
-                if dep == self:
-                    raise SyntaxError("%s is its own dependency???" % self.name).with_traceback(sys.exc_info()[2])
-
-                if dTimeStamps[dep] >= dTimeStamps[self]:
-                    dep.attemptQueue(builder, dProviders, dTimeStamps, dDependencyMap, priority + 1, lStack)
-
-                elif not dTimeStamps[self]:
-                    print("Potential providers of %-30s" % (self.name))
-                    for p in lProviders:
-                        name = "'None'"
-                        if p.base:
-                            name = "'%s'" % p.base.name
-                        print("\t%-22s base: %s %-20s" % (p.name, type(p.base), name))
-                        if p in bp:
-                            print("SHOULD WORK")
-                        if p.base in bp:
-                            print("SHOULD WORK")
-                    raise SyntaxError().with_traceback(sys.exc_info()[2])
-
-        if self != base and self in builder.lBases:
-            bQueue = False
-
-        if bQueue and (self.base is None or (self.base == base) or self.base in bp) and (not dTimeStamps[self]) and dDependencyMap[self] < priority:
-            dDependencyMap[self] = priority
-
-        return priority
-
-
-if __name__ == '__main__':
-    import sys
-    from optparse import OptionParser
-
-    usage = 'usage: %prog [options] target layer1 layer2 layer3 ...'
-    args_parser = OptionParser(usage)
-
-    args_parser.add_option("-c", "--config", action="store", dest="config", type="string",
-        help="Specify JSON containing configuration details", default="yamake-config.yaml")
-
-    args_parser.add_option("-b", "--build", action="store", dest="build", type="string",
-        help="Specify JSON containing a list of layers and build instructions", default="yamake.yaml")
-
-    args_parser.add_option("-j", "--json-output", action="store_true", dest="json_output",
-        help="Toggle JSON output", default=False)
-
-    args_parser.add_option("-y", "--yaml-output", action="store_true", dest="yaml_output",
-        help="Toggle YAML output", default=False)
-
-    args_parser.add_option("-l", "--layers", action="store", dest="layers", type="string",
-        help="Specify a layers folder", default=None)
-
-    args_parser.add_option("", "--repo", action="store", dest="layers", type="string",
-        help="Specify a layers folder", default=None)
-
-    (options, args) = args_parser.parse_args(sys.argv)
-
-    if not options.build and os.path.exists("yamake.yaml"):
-        options.build = "yamake.yaml"
-
-    if options.build and not os.path.exists(options.build):
-        print("%s not found." % options.build)
-        sys.exit(1)
-
-    builder = Builder()
-    dProviders = builder.Initialize(options.build, options.config)
-
-    if options.json_output:
-        builder.JSONOutput()
-    else:
-        _, lOutput = builder.BuildCLI(options, args[1:], dProviders)
-        print('\n'.join(lOutput))
-
-    if not _:
-        sys.exit(1)

@@ -1,23 +1,25 @@
 extern crate yaml_rust;
 extern crate clap;
 
+use std::fs::File;
+use std::io::prelude::*;
+use yaml_rust::yaml::{Hash, Yaml};
 use yaml_rust::{YamlLoader, YamlEmitter};
+// use serde_yaml; // 0.8.7
 use clap::{Arg, App, SubCommand};
-use std::collections::HashSet;
+// use std::collections::HashSet;
 
 // use git2::Repository;
 
-fn yaml_main() {
-    let s =
-"
-foo:
-    - list1
-    - list2
-bar:
-    - 1
-    - 2.0
-";
-    let docs = YamlLoader::load_from_str(s).unwrap();
+fn build_cli(_config: &str, _build: &str, _args: &str) {
+    let mut file_build = File::open(_build).expect("Unable to open build file.");
+    let mut contents_build = String::new();
+    
+    file_build.read_to_string(&mut contents_build)
+        .expect("Unable to read build file.");
+
+    let docs = YamlLoader::load_from_str(&contents_build).unwrap();
+    /*
 
     // Multi document support, doc is a yaml::Yaml
     let doc = &docs[0];
@@ -32,12 +34,13 @@ bar:
     // Chained key/array access is checked and won't panic,
     // return BadValue if they are not exist.
     assert!(doc["INVALID_KEY"][100].is_badvalue());
+    */
 
     // Dump the YAML object
     let mut out_str = String::new();
     {
         let mut emitter = YamlEmitter::new(&mut out_str);
-        emitter.dump(doc).unwrap(); // dump the YAML object to a String
+        emitter.dump(docs[]).unwrap(); // dump the YAML object to a String
     }
     println!("{}", out_str);
 }
@@ -60,6 +63,11 @@ fn main() {
                                .value_name("FILE")
                                .help("Sets a custom build file")
                                .takes_value(true))
+                          .arg(Arg::with_name("INPUT")
+                               .help("Specifies targets to build")
+                               .required(false)
+                               .multiple(true)
+                               .index(1))
                           .arg(Arg::with_name("v")
                                .short("v")
                                .multiple(true)
@@ -73,6 +81,7 @@ fn main() {
                                           .help("print debug information verbosely")))
                           .get_matches();
 
+    /*
     let mut a: HashSet<i32> = vec![1i32, 2, 3].into_iter().collect();
     let mut b: HashSet<i32> = vec![1i32, 2, 3].into_iter().collect();
 
@@ -82,17 +91,16 @@ fn main() {
     
     b.insert(2);
     b.insert(6);
-    assert_eq!(b.is_subset(&a), true);
+    // assert_eq!(b.is_subset(&a), true);
+    */
 
 
+    let _config = matches.value_of("config").unwrap_or("yamake_config.yaml");
+    let _build = matches.value_of("build").unwrap_or("yamake.yaml");
+    let _args = matches.value_of("INPUT").unwrap();
+    println!("Building using {}", _build);
 
-
-    let config = matches.value_of("config").unwrap_or("yamake_config.yaml");
-    println!("Value for config: {}", config);
-
-    let build = matches.value_of("build").unwrap_or("yamake.yaml");
-    println!("Value for build: {}", build);
-
+    /*
     // Vary the output based on how many times the user used the "verbose" flag
     // (i.e. 'myprog -v -v -v' or 'myprog -vvv' vs 'myprog -v'
     match matches.occurrences_of("v") {
@@ -111,8 +119,9 @@ fn main() {
             println!("Printing normally...");
         }
     }
+    */
 
-    yaml_main();
+    build_cli(_config, _build, _args)
 
     // more program logic goes here...
 }

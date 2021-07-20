@@ -19,3 +19,5 @@ _deps
 Thumbs.db
 
 __pycache__
+
+target

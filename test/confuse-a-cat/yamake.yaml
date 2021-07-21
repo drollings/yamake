@@ -6,7 +6,6 @@
 default:
   depends:
     - animal
-    - confusion
     - agency
 
 any:
@@ -108,6 +107,10 @@ reptile:
     - animal
     - cognitive
 
+ruminant:
+  provides:
+    - mammal
+
 stoat:
   exists: things/stoat
   provides:
@@ -125,7 +128,7 @@ vole:
 wildebeest:
   exists: things/wildebeest
   provides:
-    - mammal
+    - ruminant
 
 humans:
   exists: things/humans
@@ -189,7 +192,6 @@ bright_colors:
 # These are generally confusing things.
 
 amazement:
-  essential: True
   depends:
     - animal
     - cognitive
@@ -270,10 +272,9 @@ amaze_a_vole:
 bewilderbeest:
   exists: things/bewilderbeest
   depends:
-    - mammal
+    - ruminant
     - bright_colors
     - funny_things
-    - wild
     - bewilderment
   provides:
     - agency

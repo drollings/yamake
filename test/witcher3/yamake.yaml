@@ -1,8 +1,8 @@
 ---
 default:
   depends:
-    - stock
-    - goty
+    - base
+    - edition
 
 any:
   depends:
@@ -16,7 +16,6 @@ edition:
   essential: True
 
 stock:
-  essential: True
   depends:
     - edition
   provides:
@@ -28,6 +27,7 @@ stock:
 goty:
   exists: '%(GAME)s/bin/x64'
   provides:
+    - stock
     - edition
   clean:
     - '%(GAMESPATH)s/game'
@@ -61,7 +61,6 @@ lazarus:
   provides:
     - base
     - lazaruslike
-    - lazaruslike_lite
     - all_npc_scabbards
     - community_patch_base
     - community_patch_imports
@@ -81,14 +80,22 @@ lazarus:
 # All things compatible with w3ee 4.93 on can use this base, including w3ee_5
 # and lazarus.
 w3ee:
-  exists: '%(MODS)s/modW3EEMain'
   provides:
     - base
     - all_npc_scabbards
     - community_patch_base
-    - community_patch_imports
     - friendlyhud
     - immersive_cam
+
+# You can merge anything for w3ee into w3ee_5, but not what's specific to
+# w3ee_5 into w3ee, above.
+w3ee_493:
+  exists: '%(MODS)s/modW3EEMain'
+  depends:
+    - w3ee
+  provides:
+    - w3ee
+    - community_patch_imports
   actions:
     - layers:
         - w3ee_493
@@ -97,14 +104,11 @@ w3ee:
 # w3ee_5 into w3ee, above.
 w3ee_5:
   exists: '%(MODS)s/modW3EE'
-  provides:
-    - base
+  depends:
     - w3ee
-    - all_npc_scabbards
-    - community_patch_base
+  provides:
+    - w3ee
     - community_patch_imports
-    - friendlyhud
-    - immersive_cam
   actions:
     - layers:
         - w3ee
@@ -238,23 +242,27 @@ remastered:
 
 # This "playtest" is a composite abstract targets.
 
-playtest: {}
+playtest:
+  depends:
+    - aefderaedd
+    - lazaruslike_lite
+    - modular_eyes
+    - modular_eyes_dilated_pupils
+    - remastered
+    - less_is_more
+    - better_secondary_weapons
 
 playtest_w3ee:
   exists: '%(MODS)s/mod00007_aefderaedd_playtest'
   depends:
     - w3ee
-    - aefderaedd
-    - lazaruslike_lite
-    - modular_eyes_dilated_pupils
-    - remastered
+    - playtest
   provides:
     - playtest
   actions:
     - merges:
         - better_secondary_weapons
         - less_is_more
-        - improved_merchants
     - layers:
         - playtest_493
         - playtest_493_supplement
@@ -263,20 +271,13 @@ playtest_w3ee_5:
   exists: '%(MODS)s/mod00007_aefderaedd_playtest'
   depends:
     - w3ee_5
-    - aefderaedd
-    - lazaruslike_lite
-    - modular_eyes_dilated_pupils
-    - remastered
+    - playtest
   provides:
     - playtest
-    - less_is_more
-    - better_secondary_weapons
-    - improved_merchants
   actions:
     - merges:
         - better_secondary_weapons
         - less_is_more
-        - improved_merchants
     - layers:
         - playtest_w3ee
         - playtest_supplement
@@ -287,7 +288,6 @@ playtest_lazarus:
   depends:
     - lazarus
     - aefderaedd
-    - lazaruslike_lite
     - modular_eyes_dilated_pupils
     - better_secondary_weapons
     - remastered
@@ -336,6 +336,7 @@ immersive_cam_stock:
 ##############################################################################
 
 modular_eyes: {}
+
 modular_eyes_stock:
   exists: '%(DLC)s/dlcmodulareyes'
   provides:

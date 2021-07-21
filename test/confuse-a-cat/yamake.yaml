@@ -50,6 +50,10 @@ wild:
   depends:
     - animal
 
+domesticated:
+  depends:
+    - animal
+
 vision: {}
 
 color_vision:
@@ -68,6 +72,7 @@ cat:
     - humans
   provides:
     - feline
+    - domesticated
 
 feline:
   provides:
@@ -254,6 +259,7 @@ confuse_a_cat:
     - funny_things
     - magic_tricks
     - bright_colors
+    - domesticated
   provides:
     - agency
     - surrealism

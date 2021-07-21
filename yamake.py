@@ -299,25 +299,25 @@ class Builder:
         lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends])))
         lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
 
-        print('%-80.80s' % DIVIDER)
-        print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
-        print('%-15.15s %s' % ('lAbstracts', lsset(lAbstracts)))
-        print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
-        print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
-        print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
+        # print('%-80.80s' % DIVIDER)
+        # print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
+        # print('%-15.15s %s' % ('lAbstracts', lsset(lAbstracts)))
+        # print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
+        # print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
+        # print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
         
         lChosenEssentials = lFullProvides & lEssentials
         lChosenEssentials |= self.lEssentials & set(list(chain.from_iterable([t.provides for t in lChosenEssentials if t.provides])))
-        print('%s%-15.15s%s %s' % (WHI, 'lChosenEssentials', NRM, lsset(lChosenEssentials)))
+        # print('%s%-15.15s%s %s' % (WHI, 'lChosenEssentials', NRM, lsset(lChosenEssentials)))
         lExcludedEssentials = lEssentials - lChosenEssentials
-        print('%s%-15.15s%s %s' % (WHI, 'lExcludedEssentials', NRM, lsset(lExcludedEssentials)))
+        # print('%s%-15.15s%s %s' % (WHI, 'lExcludedEssentials', NRM, lsset(lExcludedEssentials)))
         
 
         # The counter shouldn't be needed, but preventing infinite loops in the case of malformed YAML is nice.
         counter = 5
 
         lAddToQueue = set()
-        print('%-80.80s' % DIVIDER)
+        # print('%-80.80s' % DIVIDER)
 
         # We should be able to empty out lDepends, lD, and lP to get to a complete recipe.
         while lDepends or (lP and lP != lProvides) or (lD and lD != lDepends):
@@ -361,18 +361,18 @@ class Builder:
                 if depend.IsAbstract():
                     if depend.depends and depend.Depends() <= lFullProvides:
                         lPP |= set([depend])
-                    print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
+                    # print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
 
                     # Fetch the list of other targets that provide this
                     if depend in dProviders:
                         lPP |= set([t for t in dProviders[depend] if not t.depends or (t.Depends() & lChosenEssentials)])
                         
-                    print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
+                    # print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
                     
                     if len(lPP) > 1 and lEssentials & lPP:
                         lPP -= lExcludedEssentials | lAbstracts
 
-                    print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
+                    # print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
                 else:
                     lPP |= set([depend])
                     
@@ -391,44 +391,44 @@ class Builder:
                     continue
                     
                 if lPP & lFullProvides and len(lPP & lFullProvides) == 1:
-                    print('\t%sDisambiguated for %s:%s' % (GRN, repr(depend), NRM), lPP & lFullProvides)
+                    # print('\t%sDisambiguated for %s:%s' % (GRN, repr(depend), NRM), lPP & lFullProvides)
                     lAddToQueue |= lPP & lFullProvides
                     continue
 
                 if len(lPP) != 1:
                     lPP = set([t for t in lPP if t.depends and t.Depends() & lFullProvides])
-                    print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
+                    # print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
 
                 if len(lPP) != 1:
                     lPP = set([t for t in lPP if t.depends and t.Depends() & lQueueSet])
-                    print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
+                    # print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
 
                 if len(lPP) == 1:
-                    print('\t%sDisambiguated for %s:%s' % (GRN, repr(depend), NRM), lPP)
+                    # print('\t%sDisambiguated for %s:%s' % (GRN, repr(depend), NRM), lPP)
                     lAddToQueue |= lPP
                     continue
 
-                print('\t%sAMBIGUOUS FOR %s:%s %s' % (YEL, repr(depend), NRM, lPP))
+                # print('\t%sAMBIGUOUS FOR %s:%s %s' % (YEL, repr(depend), NRM, lPP))
 
             # print('%-15.15s %s' % ('lDepends - lAbstracts', lDepends - lAbstracts))
             # print('%-80.80s' % DIVIDER)
             
-            print('%-80.80s' % HASHDIVIDER)
+            # print('%-80.80s' % HASHDIVIDER)
             # print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
             # print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
             # print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
             # print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
             lAddToQueue |= set([t for t in lDepends if not t.IsAbstract() and t.Depends() <= lFullProvides])
             # print('%-80.80s' % DIVIDER)
-            print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
-            print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
-            print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
-            print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
-            print('%-80.80s' % HASHDIVIDER)
+            # print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
+            # print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
+            # print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
+            # print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
+            # print('%-80.80s' % HASHDIVIDER)
 
             # Set logic to add to the queue and update sets accordingly
             if lAddToQueue:
-                print('%s%-15.15s%s %s' % (CYN, 'lAddToQueue', NRM, lAddToQueue))
+                # print('%s%-15.15s%s %s' % (CYN, 'lAddToQueue', NRM, lAddToQueue))
                 lQueueSet |= lAddToQueue
                 lAbstracts = set([t for t in lQueueSet | lDepends if t.IsAbstract()])
                 lDepends |= lAbstracts
@@ -587,13 +587,13 @@ def BuildCLI(options, args):
         lTargets = builder.index['default'].depends
         print("%-22s Attempting build from %s: default" % (START, options.build))
 
-    if builder.lEssentials:
-        print('ESSENTIALS:')
-        for e in builder.lEssentials:
-            if e in dProviders:
-                print(repr(e), pformat(dProviders[e]))
-            else:
-                print(repr(e))
+    # if builder.lEssentials:
+    #     print('ESSENTIALS:')
+    #     for e in builder.lEssentials:
+    #         if e in dProviders:
+    #             print(repr(e), str(dProviders[e]))
+    #         else:
+    #             print(repr(e))
     result, lQueue, lAmbiguous = builder.Enqueue(lTargets, dProviders)
 
     if not result:

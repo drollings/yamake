@@ -32,11 +32,6 @@ cognitive:
   depends:
     - animal
 
-domesticated:
-  depends:
-    - animal
-    - humans
-
 hearing:
   depends:
     - cognitive
@@ -72,7 +67,6 @@ cat:
     - humans
   provides:
     - feline
-    - domesticated
 
 feline:
   provides:
@@ -259,7 +253,6 @@ confuse_a_cat:
     - funny_things
     - magic_tricks
     - bright_colors
-    - domesticated
   provides:
     - agency
     - surrealism

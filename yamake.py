@@ -77,6 +77,7 @@ class Builder:
         self.lEssentials = set()
         self.dEssentialsToFamilies = defaultdict(Target, {})
         self.plugin = None
+        self.debug_output = False
 
     def _initConfig(self, sConfigFile=None):
         for i in (sConfigFile, "yamake-config.yaml",
@@ -230,6 +231,7 @@ class Builder:
     def MakeBuildDependencyDepths(self, lTargets, dProviders, dTimeStamps):
         dDependencyMap = defaultdict(int)
 
+        # The old brute-force attemptQueue has been replaced
         for target in lTargets:
             target.attemptQueue(builder, dProviders, dTimeStamps, dDependencyMap, 0)
 
@@ -259,7 +261,7 @@ class Builder:
     # Check a build dependency
     # Returns: True/False success code, a list of targets in build order,
     # a list of ambiguous targets if any
-    def Enqueue(self, lTargets, dProviders):
+    def Enqueue(self, lTargets, dProviders, debug_output = False):
         dTimeStamps = defaultdict(float)
         [t.CheckTimeStamp(self, dTimeStamps) for t in self.lTargets]
         
@@ -284,7 +286,8 @@ class Builder:
         for essential in self.lEssentials:
             lEssentials |= dProviders[essential]
 
-        # print('%-15.15s %s' % ('lTargetSet', lTargetSet))
+        if debug_output:
+            print('%-15.15s %s' % ('lTargetSet', lTargetSet))
 
         lQueueSet = lTargetSet
         lProvides = set(list(chain.from_iterable([t.provides for t in lQueueSet if t.provides])))
@@ -299,25 +302,30 @@ class Builder:
         lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends])))
         lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
 
-        # print('%-80.80s' % DIVIDER)
-        # print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
-        # print('%-15.15s %s' % ('lAbstracts', lsset(lAbstracts)))
-        # print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
-        # print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
-        # print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
+        if debug_output:
+            print('%-80.80s' % DIVIDER)
+            print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
+            print('%-15.15s %s' % ('lAbstracts', lsset(lAbstracts)))
+            print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
+            print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
+            print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
         
         lChosenEssentials = lFullProvides & lEssentials
         lChosenEssentials |= self.lEssentials & set(list(chain.from_iterable([t.provides for t in lChosenEssentials if t.provides])))
-        # print('%s%-15.15s%s %s' % (WHI, 'lChosenEssentials', NRM, lsset(lChosenEssentials)))
         lExcludedEssentials = lEssentials - lChosenEssentials
-        # print('%s%-15.15s%s %s' % (WHI, 'lExcludedEssentials', NRM, lsset(lExcludedEssentials)))
+
+        if debug_output:
+            print('%s%-15.15s%s %s' % (WHI, 'lChosenEssentials', NRM, lsset(lChosenEssentials)))
+            print('%s%-15.15s%s %s' % (WHI, 'lExcludedEssentials', NRM, lsset(lExcludedEssentials)))
         
 
         # The counter shouldn't be needed, but preventing infinite loops in the case of malformed YAML is nice.
         counter = 5
 
         lAddToQueue = set()
-        # print('%-80.80s' % DIVIDER)
+
+        if debug_output:
+            print('%-80.80s' % DIVIDER)
 
         # We should be able to empty out lDepends, lD, and lP to get to a complete recipe.
         while lDepends or (lP and lP != lProvides) or (lD and lD != lDepends):
@@ -347,10 +355,12 @@ class Builder:
 
             lFullProvides = lQueueSet | lProvides
 
-            # print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
-            # print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
-            # print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
-            # print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
+
+            if debug_output:
+                print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
+                print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
+                print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
+                print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
 
             # See if we have a single possible choice of providers for any dependencies
             for depend in lDepends:
@@ -373,7 +383,7 @@ class Builder:
                         lPP -= lExcludedEssentials | lAbstracts
 
                     # print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
-                else:
+                elif depend not in lFullProvides:
                     lPP |= set([depend])
                     
                 """
@@ -390,9 +400,9 @@ class Builder:
                 if not lPP:
                     continue
                     
-                if lPP & lFullProvides and len(lPP & lFullProvides) == 1:
+                if lPP & lProvides and len(lPP & lProvides) == 1:
                     # print('\t%sDisambiguated for %s:%s' % (GRN, repr(depend), NRM), lPP & lFullProvides)
-                    lAddToQueue |= lPP & lFullProvides
+                    lAddToQueue |= lPP & lProvides
                     continue
 
                 if len(lPP) != 1:
@@ -413,27 +423,32 @@ class Builder:
             # print('%-15.15s %s' % ('lDepends - lAbstracts', lDepends - lAbstracts))
             # print('%-80.80s' % DIVIDER)
             
-            # print('%-80.80s' % HASHDIVIDER)
-            # print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
-            # print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
-            # print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
-            # print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
-            lAddToQueue |= set([t for t in lDepends if not t.IsAbstract() and t.Depends() <= lFullProvides])
-            # print('%-80.80s' % DIVIDER)
-            # print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
-            # print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
-            # print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
-            # print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
-            # print('%-80.80s' % HASHDIVIDER)
+
+            if debug_output:
+                print('%-80.80s' % HASHDIVIDER)
+                print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
+                print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
+                print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
+                print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
+
+            lAddToQueue |= set([t for t in lDepends if t.IsAbstract() == False and t not in lFullProvides and t.Depends() <= lFullProvides])
+
+            if debug_output:
+                print('%-80.80s' % DIVIDER)
+                print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
+                print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
+                print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
+                print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
+                print('%-80.80s' % HASHDIVIDER)
 
             # Set logic to add to the queue and update sets accordingly
             if lAddToQueue:
                 # print('%s%-15.15s%s %s' % (CYN, 'lAddToQueue', NRM, lAddToQueue))
                 lQueueSet |= lAddToQueue
                 lAbstracts = set([t for t in lQueueSet | lDepends if t.IsAbstract()])
-                lDepends |= lAbstracts
                 lQueueSet -= lAbstracts
                 lFullProvides |= lQueueSet
+                lDepends |= lAbstracts - lFullProvides
 
                 if lFullProvides:
                     lDepends -= set([t for t in lDepends if t.IsAbstract() and t.depends and t.Depends() <= lFullProvides])
@@ -454,15 +469,16 @@ class Builder:
             lD -= lDepends
             lD -= lFullProvides
 
-            # print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
-            # print('%-15.15s %s' % ('lAbstracts', lsset(lAbstracts)))
-            # print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
-            # print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
-            # print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
-            # print('%-15.15s %s' % ('lQ lEssentials', lsset(lQueueSet & lEssentials)))
-            # print('%-15.15s %s' % ('lD', lD))
-            # print('%-15.15s %s' % ('lP', lP))
-            # print('%-80.80s' % (DIVIDER))
+            if debug_output:
+                print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
+                print('%-15.15s %s' % ('lAbstracts', lsset(lAbstracts)))
+                print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
+                print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
+                print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
+                print('%-15.15s %s' % ('lQ lEssentials', lsset(lQueueSet & lEssentials)))
+                print('%-15.15s %s' % ('lD', lD))
+                print('%-15.15s %s' % ('lP', lP))
+                print('%-80.80s' % (DIVIDER))
 
             counter -= 1
             if counter <= 0:
@@ -470,9 +486,10 @@ class Builder:
 
         lDepends -= set([t for t in lDepends if t.IsAbstract() and t.depends and t.Depends() <= lFullProvides])
 
-        # print('%-80.80s' % (HASHDIVIDER))
-        # print('%-15.15s %s' % ('lQueueSet', lQueueSet))
-        # print('%-15.15s %s' % ('lDepends', lDepends))
+        if debug_output:
+            print('%-80.80s' % (HASHDIVIDER))
+            print('%-15.15s %s' % ('lQueueSet', lQueueSet))
+            print('%-15.15s %s' % ('lDepends', lDepends))
         
         return True, lQueueSet, lDepends
 
@@ -576,7 +593,7 @@ def BuildCLI(options, args):
 
     dProviders = builder.Initialize(options.build, options.config)
 
-    print('%-80.80s' % HASHDIVIDER)
+    # print('%-80.80s' % HASHDIVIDER)
 
     lTargets = None
     if len(args):
@@ -587,14 +604,15 @@ def BuildCLI(options, args):
         lTargets = builder.index['default'].depends
         print("%-22s Attempting build from %s: default" % (START, options.build))
 
-    # if builder.lEssentials:
-    #     print('ESSENTIALS:')
-    #     for e in builder.lEssentials:
-    #         if e in dProviders:
-    #             print(repr(e), str(dProviders[e]))
-    #         else:
-    #             print(repr(e))
-    result, lQueue, lAmbiguous = builder.Enqueue(lTargets, dProviders)
+    if options.debug_output and builder.lEssentials:
+        print('ESSENTIALS:')
+        for e in builder.lEssentials:
+            if e in dProviders:
+                print(repr(e), str(dProviders[e]))
+            else:
+                print(repr(e))
+    
+    result, lQueue, lAmbiguous = builder.Enqueue(lTargets, dProviders, options.debug_output)
 
     if not result:
         return False, []
@@ -618,11 +636,6 @@ def BuildCLI(options, args):
                 sCause = 'No target, no possible providers'
             lOutput.append('%-34s %s' % (t.name, sCause))
 
-        # lOutput.append('\n%-22s %s' % (INFO, 'DISAMBIGUATED'))
-        # for t in lQueue:
-        #     if not t.exists:
-        #         continue
-        #     lOutput.append('%-36s %-40s %s' % (t.name, t.exists, t.GetLayers()))
         return False, lOutput
 
     lOutput.append("%-22s %-22s %-28s %s" % (SUCCESS, '', "FILE/DIR", "LAYERS TO WRITE"))
@@ -672,6 +685,9 @@ if __name__ == '__main__':
 
     args_parser.add_option("-y", "--yaml-output", action="store_true", dest="yaml_output",
         help="Toggle YAML output", default=False)
+
+    args_parser.add_option("", "--debug", action="store_true", dest="debug_output",
+        help="Toggle debugging output", default=False)
 
     args_parser.add_option("-l", "--layers", action="store", dest="layers", type="string",
         help="Specify a layers directory", default=None)

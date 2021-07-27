@@ -60,6 +60,7 @@ lazarus:
   exists: '%(MODS)s/mod_W3EELazarusProject'
   provides:
     - base
+    - w3ee
     - lazaruslike
     - all_npc_scabbards
     - community_patch_base
@@ -84,6 +85,7 @@ w3ee:
     - base
     - all_npc_scabbards
     - community_patch_base
+    - community_patch_imports
     - friendlyhud
     - immersive_cam
 
@@ -95,7 +97,12 @@ w3ee_493:
     - w3ee
   provides:
     - w3ee
+    - base
+    - all_npc_scabbards
+    - community_patch_base
     - community_patch_imports
+    - friendlyhud
+    - immersive_cam
   actions:
     - layers:
         - w3ee_493
@@ -108,7 +115,12 @@ w3ee_5:
     - w3ee
   provides:
     - w3ee
+    - base
+    - all_npc_scabbards
+    - community_patch_base
     - community_patch_imports
+    - friendlyhud
+    - immersive_cam
   actions:
     - layers:
         - w3ee

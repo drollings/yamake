@@ -131,23 +131,33 @@ w3ee_5:
 
 aefderaedd:
   depends:
-    - w3ee
     - community_patch_b_and_n
     - gwent_redux
     - mcm
     - modular_eyes
     - rer
     - shields
+    - w3ee
 
 # Now we have base-specific implementations that will satisfy the above
 # abstract target, and will be automatically selected.  Depends which are
 # abstract as well are similarly structured, and they are automatically
 # chosen.
 
+aefderaedd_stock:
+  exists: '%(MODS)s/mod00008_aefderaedd_493'
+  depends:
+    - aefderaedd
+    - stock
+    - less_indignant_npcs
+  provides:
+    - aefderaedd
+
 aefderaedd_w3ee:
   exists: '%(MODS)s/mod00008_aefderaedd_493'
   depends:
     - aefderaedd
+    - w3ee
   provides:
     - aefderaedd
     - less_indignant_npcs
@@ -182,8 +192,8 @@ aefderaedd_w3ee_5:
 aefderaedd_lazarus:
   exists: '%(MODS)s/mod00008_aefderaedd_lazarus'
   depends:
-    - lazarus
     - aefderaedd
+    - lazarus
   provides:
     - aefderaedd
     - less_indignant_npcs
@@ -302,11 +312,13 @@ community_patch_base_stock:
     - layers:
         - community_patch_base
 
-friendlyhud: {}
+friendlyhud:
+  depends:
+    - base
+    - community_patch_base
+
 friendlyhud_stock:
   exists: '%(MODS)s/modFriendlyHUD'
-  depends:
-    - community_patch_base
   provides:
     - friendlyhud
 

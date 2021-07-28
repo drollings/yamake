@@ -228,10 +228,11 @@ class Builder:
     # concurrently.
     # Returns:  a list of sets, each least index containing the targets that
     # had its offset in their dependency depth.
-    def OrderByDepends(self, lTargets, lQueueSet, lEssentials, dProviders, debug_output = True):
+    def OrderByDepends(self, lTargets, lQueueSet, lEssentials, dProviders, debug_output = False):
         lDepths = [list(set([t for t in lQueueSet & lEssentials if not t.depends]))]
         lDepths.append(list(set([t for t in lQueueSet & lEssentials if t.depends])))
         lProvides = lQueueSet & lEssentials
+        lProvides |= set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
         lDepends = lQueueSet - lProvides
 
         if debug_output:
@@ -240,7 +241,7 @@ class Builder:
             print('\tlProvides', lsset(lProvides))
 
         count = 10
-        lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
+        lP = set()
         lDepends -= lP
         lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends is not None])))
 
@@ -269,7 +270,8 @@ class Builder:
                 lDepends -= l
                 lProvides |= l
             
-            print('\t--- lDepends', lDepends)
+            if debug_output:
+                print('\t--- lDepends', lDepends)
             while lD and lD != lDepends:
                 if debug_output:
                     print('\t--- lD', (lD))

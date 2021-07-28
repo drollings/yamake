@@ -58,6 +58,8 @@ ghost_mode:
 # merge target for w3ee-compatible mods.
 lazarus:
   exists: '%(MODS)s/mod_W3EELazarusProject'
+  depends:
+    - w3ee
   provides:
     - base
     - w3ee
@@ -127,7 +129,15 @@ w3ee_5:
 # of W3EE 4.93 on, or from Lazarus.  The correct version of modular eyes for
 # the base will be installed.
 
-aefderaedd: {}
+aefderaedd:
+  depends:
+    - w3ee
+    - community_patch_b_and_n
+    - gwent_redux
+    - mcm
+    - modular_eyes
+    - rer
+    - shields
 
 # Now we have base-specific implementations that will satisfy the above
 # abstract target, and will be automatically selected.  Depends which are
@@ -137,13 +147,7 @@ aefderaedd: {}
 aefderaedd_w3ee:
   exists: '%(MODS)s/mod00008_aefderaedd_493'
   depends:
-    - w3ee
-    - community_patch_b_and_n
-    - gwent_redux
-    - mcm
-    - modular_eyes
-    - rer
-    - shields
+    - aefderaedd
   provides:
     - aefderaedd
     - less_indignant_npcs
@@ -160,13 +164,8 @@ aefderaedd_w3ee:
 aefderaedd_w3ee_5:
   exists: '%(MODS)s/mod00008_aefderaedd'
   depends:
+    - aefderaedd
     - w3ee_5
-    - community_patch_b_and_n
-    - gwent_redux
-    - mcm
-    - modular_eyes
-    - rer
-    - shields
   provides:
     - aefderaedd
     - less_indignant_npcs
@@ -184,12 +183,7 @@ aefderaedd_lazarus:
   exists: '%(MODS)s/mod00008_aefderaedd_lazarus'
   depends:
     - lazarus
-    - community_patch_b_and_n
-    - gwent_redux
-    - mcm
-    - modular_eyes
-    - rer
-    - shields
+    - aefderaedd
   provides:
     - aefderaedd
     - less_indignant_npcs
@@ -209,7 +203,6 @@ lazaruslike:
   depends:
     - immersive_cam
     - modular_eyes
-    - modular_eyes_dilated_pupils
     - natural_torchlight
     - primal_needs
     - swords_and_meditation
@@ -221,7 +214,6 @@ lazaruslike_lite:
   depends:
     - immersive_cam
     - modular_eyes
-    - modular_eyes_dilated_pupils
     - natural_torchlight
     - swords_on_roach
     - thoughtful_roach
@@ -246,7 +238,6 @@ playtest:
     - better_secondary_weapons
     - lazaruslike_lite
     - less_is_more
-    - modular_eyes
     - modular_eyes_dilated_pupils
     - remastered
 

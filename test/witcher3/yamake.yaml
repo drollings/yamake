@@ -62,11 +62,6 @@ lazarus:
     - base
     - w3ee
     - lazaruslike
-    - all_npc_scabbards
-    - community_patch_base
-    - community_patch_imports
-    - friendlyhud
-    - immersive_cam
     - modular_eyes
     - natural_torchlight
     - primal_needs
@@ -83,6 +78,7 @@ lazarus:
 w3ee:
   provides:
     - base
+    - accessory_slot_mod
     - all_npc_scabbards
     - community_patch_base
     - community_patch_imports
@@ -98,11 +94,6 @@ w3ee_493:
   provides:
     - w3ee
     - base
-    - all_npc_scabbards
-    - community_patch_base
-    - community_patch_imports
-    - friendlyhud
-    - immersive_cam
   actions:
     - layers:
         - w3ee_493
@@ -116,11 +107,6 @@ w3ee_5:
   provides:
     - w3ee
     - base
-    - all_npc_scabbards
-    - community_patch_base
-    - community_patch_imports
-    - friendlyhud
-    - immersive_cam
   actions:
     - layers:
         - w3ee
@@ -257,12 +243,12 @@ remastered:
 playtest:
   depends:
     - aefderaedd
+    - better_secondary_weapons
     - lazaruslike_lite
+    - less_is_more
     - modular_eyes
     - modular_eyes_dilated_pupils
     - remastered
-    - less_is_more
-    - better_secondary_weapons
 
 playtest_w3ee:
   exists: '%(MODS)s/mod00007_aefderaedd_playtest'
@@ -459,6 +445,13 @@ iorveth:
   depends:
     - enable_mimics
 
+killing_monsters_cloak:
+  exists: '%(DLC)s/dlc_KillingMonstersCloak'
+  depends:
+    - accessory_slot_mod
+    - auto_hide_weapons
+    - hoods
+
 mcm:
   exists: '%(DLC)s/DLCmod_spawn_companions'
   depends:
@@ -474,6 +467,12 @@ rer:
   actions:
     - bootstrap: 'modCreate_RandomEncountersReworked()'
 
+
+accessory_slot_mod:
+  exists: '%(MODS)s/mod_ASM'
+
+auto_hide_weapons:
+  exists: '%(MODS)s/mod_AHW'
 
 better_secondary_weapons:
   exists: '%(MODS)s/modBetterSecondaryWeapons'

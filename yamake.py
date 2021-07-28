@@ -228,43 +228,78 @@ class Builder:
     # concurrently.
     # Returns:  a list of sets, each least index containing the targets that
     # had its offset in their dependency depth.
-    def MakeBuildDependencyDepths(self, lTargets, dProviders, dTimeStamps):
-        dDependencyMap = defaultdict(int)
+    def OrderByDepends(self, lTargets, lQueueSet, lEssentials, dProviders, debug_output = True):
+        lDepths = [list(set([t for t in lQueueSet & lEssentials if not t.depends]))]
+        lDepths.append(list(set([t for t in lQueueSet & lEssentials if t.depends])))
+        lProvides = lQueueSet & lEssentials
+        lDepends = lQueueSet - lProvides
 
-        # The old brute-force attemptQueue has been replaced
-        for target in lTargets:
-            target.attemptQueue(builder, dProviders, dTimeStamps, dDependencyMap, 0)
+        if debug_output:
+            print('%-78.78s' % ('OrderByDepends %s' % HASHDIVIDER))
+            print('\tlDepends', lsset(lDepends))
+            print('\tlProvides', lsset(lProvides))
 
-        max = [i for i in dDependencyMap.values() if i is not None]
-        max.sort()
-        try:
-            max = max[-1]
+        count = 10
+        lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
+        lDepends -= lP
+        lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends is not None])))
 
-        # What, we've got nothing?
-        except IndexError:
-            return []
+        while lDepends or lD or lP:
+            if debug_output:
+                print('%-78.78s' % ('lDepends loop %s' % DIVIDER))
+                print('\tlDepends', lsset(lDepends))
+                print('\tlD', lsset(lD))
+                print('\tlP', lsset(lP))
 
-        lSets = []
-        for i in range(0, max + 1):
-            lSets.append([])
+            while lP and lP != lProvides:
+                if debug_output:
+                    print('\t--- lP', (lP), '\tlProvides', lProvides)
+                lProvides |= lP
+                lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
+                lP -= lProvides
+                lDepends -= lProvides
+                lD -= lProvides
 
-        for name, priority in dDependencyMap.items():
-            lSets[priority].append(name)
+            l = set([t for t in lDepends if not t.depends or t.Depends() <= lProvides]) 
+            l &= lQueueSet
+            if l:
+                lAdd = list(l)
+                lAdd.sort()
+                lDepths.append(lAdd)
+                lDepends -= l
+                lProvides |= l
+            
+            print('\t--- lDepends', lDepends)
+            while lD and lD != lDepends:
+                if debug_output:
+                    print('\t--- lD', (lD))
+                lDepends |= lD
+                lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends is not None])))
+                lD -= lDepends
+                lD -= lProvides
 
-        lSets = [set(i) for i in lSets]
-        lSets.reverse()
+            lP |= set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
+            lP -= lProvides 
 
-        return lSets
+            count -= 1            
+            if not count:
+                break
 
+        if debug_output:
+            print('\tlD', lsset(lD))
+            print('\tlProvides', lsset(lProvides))
+            print('%-78.78s' % ('lDepths %s' % DIVIDER))
+            for i in lDepths:
+                print('\t%s' % i)
+
+        lReturn = [t for t in chain.from_iterable([t for t in lDepths]) if not t.IsAbstract()]
+        return lReturn
 
     ############################################################
     # Check a build dependency
     # Returns: True/False success code, a list of targets in build order,
     # a list of ambiguous targets if any
     def Enqueue(self, lTargets, dProviders, debug_output = False):
-        dTimeStamps = defaultdict(float)
-        [t.CheckTimeStamp(self, dTimeStamps) for t in self.lTargets]
-        
         if not lTargets:
             default = None
             if 'default' in self.index:
@@ -303,7 +338,7 @@ class Builder:
         lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
 
         if debug_output:
-            print('%-80.80s' % DIVIDER)
+            print('%-78.78s' % ('Enqueue %s' % HASHDIVIDER))
             print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
             print('%-15.15s %s' % ('lAbstracts', lsset(lAbstracts)))
             print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
@@ -325,36 +360,45 @@ class Builder:
         lAddToQueue = set()
 
         if debug_output:
-            print('%-80.80s' % DIVIDER)
+            print('%-78.78s' % ('Enqueue lDepends loop %s' % HASHDIVIDER))
 
         # We should be able to empty out lDepends, lD, and lP to get to a complete recipe.
         while lDepends or (lP and lP != lProvides) or (lD and lD != lDepends):
             # First, work out all the provides from lP to the  best depth possible.
-            # print('%-80.80s' % ('%-3.3s %s %s' % (HASHDIVIDER, 'dependency resolution', HASHDIVIDER)))
-            # print('\tlP', lP, 'lProvides', lProvides)
+            if debug_output:
+                print('%-78.78s' % ('%-3.3s %s %s' % (DIVIDER, 'dependency resolution', DIVIDER)))
+                print('\tlP', lP, 'lProvides', lProvides)
+
             while lP and lP != lProvides:
-                # print('\tlP loop', 'lP', lsset(lP), 'lProvides', lsset(lProvides))
+                if debug_output:
+                    print('\tlP loop', 'lP', lsset(lP), 'lProvides', lsset(lProvides))
                 lProvides |= lP
                 lFullProvides = lQueueSet | lProvides
                 lP = set(list(chain.from_iterable([t.provides for t in lFullProvides if t.provides])))
                 lP -= lProvides 
-            # print('\tlP loop done', 'lP', lsset(lP), 'lProvides', lsset(lProvides))
-            # print('%-80.80s' % DIVIDER)
+
+            if debug_output:
+                print('\tlP loop done', 'lP', lsset(lP), 'lProvides', lsset(lProvides))
+                print('%-80.80s' % DIVIDER)
 
             lDepends -= lFullProvides
 
             # Second, get all the new dependencies from lD.
-            # print('\tlD', lD, 'lDepends', lDepends)
+            if debug_output:
+                print('\tlD', lD, 'lDepends', lDepends)
+
             while lD and lD != lDepends:
-                # print('\tlD loop', 'lD', lsset(lD), 'lDepends', lsset(lDepends))
+                if debug_output:
+                    print('\tlD loop', 'lD', lsset(lD), 'lDepends', lsset(lDepends))
                 lDepends |= lD
                 lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends is not None or t.Depends() & lFullProvides])))
                 lD -= lDepends
-            # print('\tlD loop done', 'lD', lsset(lD), '\n\tlDepends', lsset(lDepends))
-            # print('%-80.80s' % DIVIDER)
+
+            if debug_output:
+                print('\tlD loop done', 'lD', lsset(lD), '\n\tlDepends', lsset(lDepends))
+                print('%-80.80s' % DIVIDER)
 
             lFullProvides = lQueueSet | lProvides
-
 
             if debug_output:
                 print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
@@ -386,22 +430,12 @@ class Builder:
                 elif depend not in lFullProvides:
                     lPP |= set([depend])
                     
-                """
-
-                if lPP & lEssentials & lFullProvides:
-                    lPP &= lEssentials & lFullProvides
-                    print('\t%s lPP & lEssentials & lFullProvides: %s' % (repr(depend), lsset(lPP)))
-
-                if not depend.IsAbstract() or depend.depends and depend.Depends() <= lFullProvides:
-                    lPP |= set([depend])
-                    lPP -= lEssentials
-                """
-
                 if not lPP:
                     continue
                     
                 if lPP & lProvides and len(lPP & lProvides) == 1:
-                    # print('\t%sDisambiguated for %s:%s' % (GRN, repr(depend), NRM), lPP & lFullProvides)
+                    if debug_output:
+                        print('\t%sDisambiguated for %s:%s' % (GRN, repr(depend), NRM), lPP & lFullProvides)
                     lAddToQueue |= lPP & lProvides
                     continue
 
@@ -414,7 +448,8 @@ class Builder:
                     # print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
 
                 if len(lPP) == 1:
-                    # print('\t%sDisambiguated for %s:%s' % (GRN, repr(depend), NRM), lPP)
+                    if debug_output:
+                        print('\t%sDisambiguated for %s:%s' % (GRN, repr(depend), NRM), lPP)
                     lAddToQueue |= lPP
                     continue
 
@@ -422,10 +457,9 @@ class Builder:
 
             # print('%-15.15s %s' % ('lDepends - lAbstracts', lDepends - lAbstracts))
             # print('%-80.80s' % DIVIDER)
-            
 
             if debug_output:
-                print('%-80.80s' % HASHDIVIDER)
+                print('%-78.78s' % ('Enqueue post disambiguation %s' % DIVIDER))
                 print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
                 print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
                 print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
@@ -434,12 +468,12 @@ class Builder:
             lAddToQueue |= set([t for t in lDepends if t.IsAbstract() == False and t not in lFullProvides and t.Depends() <= lFullProvides])
 
             if debug_output:
-                print('%-80.80s' % DIVIDER)
+                print('%-78.78s' % ('Enqueue final lAddToEqueue %s' % DIVIDER))
                 print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
                 print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
                 print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
                 print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
-                print('%-80.80s' % HASHDIVIDER)
+                print('%-80.80s' % DIVIDER)
 
             # Set logic to add to the queue and update sets accordingly
             if lAddToQueue:
@@ -478,7 +512,6 @@ class Builder:
                 print('%-15.15s %s' % ('lQ lEssentials', lsset(lQueueSet & lEssentials)))
                 print('%-15.15s %s' % ('lD', lD))
                 print('%-15.15s %s' % ('lP', lP))
-                print('%-80.80s' % (DIVIDER))
 
             counter -= 1
             if counter <= 0:
@@ -487,11 +520,10 @@ class Builder:
         lDepends -= set([t for t in lDepends if t.IsAbstract() and t.depends and t.Depends() <= lFullProvides])
 
         if debug_output:
-            print('%-80.80s' % (HASHDIVIDER))
+            print('%-80.80s' % (DIVIDER))
             print('%-15.15s %s' % ('lQueueSet', lQueueSet))
             print('%-15.15s %s' % ('lDepends', lDepends))
-        
-        return True, lQueueSet, lDepends
+        return True, lQueueSet, lDepends, lEssentials, lFullProvides
 
 
 # The Target class provides a target build layer or condition.
@@ -539,6 +571,9 @@ class Target:
 
     def __repr__(self):
         return(self.name)
+
+    def __lt__(self, other):
+        return self.name < other.name
 
     def GetLayers(self):
         if not self.layers:
@@ -593,8 +628,6 @@ def BuildCLI(options, args):
 
     dProviders = builder.Initialize(options.build, options.config)
 
-    # print('%-80.80s' % HASHDIVIDER)
-
     lTargets = None
     if len(args):
         lTargets = [builder.index[i] for i in args if i in builder.index]
@@ -612,14 +645,14 @@ def BuildCLI(options, args):
             else:
                 print(repr(e))
     
-    result, lQueue, lAmbiguous = builder.Enqueue(lTargets, dProviders, options.debug_output)
+    result, lQueueSet, lAmbiguous, lEssentials, lFullProvides = builder.Enqueue(lTargets, dProviders, options.debug_output)
 
     if not result:
         return False, []
 
     lOutput = []
 
-    lOutput.append('%-80.80s' % DIVIDER)
+    lOutput.append('%-80.80s' % HASHDIVIDER)
     if len(lAmbiguous):
         lOutput.append('%-16s Can not resolve for %s based on targets %s' % (ERROR, builder.lEssentials, lTargets))
         lOutput.append('%-34s %s' % ('AMBIGUOUS', 'POTENTIALLY PROVIDED BY'))
@@ -639,7 +672,10 @@ def BuildCLI(options, args):
         return False, lOutput
 
     lOutput.append("%-22s %-22s %-28s %s" % (SUCCESS, '', "FILE/DIR", "LAYERS TO WRITE"))
-    for t in lQueue:
+
+    lOrdered = builder.OrderByDepends(lTargets, lQueueSet, lEssentials, dProviders)
+
+    for t in lOrdered:
         lOutput.append('%-34s %-28s %s' % (t.name, t.exists, t.GetLayers()))
 
     return True, lOutput

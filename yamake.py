@@ -122,8 +122,11 @@ class Builder:
                 Target(key, self, value)
 
         if self.plugin and 'pluginInitialize' in self.plugin.__dict__:
-            self.plugin.pluginInitialize(self)
-            print(pformat(self.lTargets))
+            dReturn = self.plugin.pluginInitialize(self)
+            for key, value in dReturn.items():
+                Target(key, self, value)
+            l = self.lTargets
+            l.sort()
             
         self.lEssentials = set([t for t in self.lTargets if t.essential])
 

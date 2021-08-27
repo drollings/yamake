@@ -302,6 +302,7 @@ playtest_lazarus:
 # abstract target they provide.  See modular_eyes for an example.
 ##############################################################################
 
+accessory_slot_mod: {}
 
 community_patch_base: {}
 community_patch_base_stock:
@@ -468,5 +469,4 @@ rer:
     - friendlyhud
   actions:
     - bootstrap: 'modCreate_RandomEncountersReworked()'
-
 

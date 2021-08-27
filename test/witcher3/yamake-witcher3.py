@@ -39,15 +39,15 @@ def pluginInitialize(builder):
             lTargets.sort()
             if len(lTargets):
                 p = lTargets[0].parts
-                d['target'] = r'%(DLC)s/' + p[-1]
+                d['exists'] = r'%(DLC)s/' + p[-1]
             else:
                 lTargets = [f for f in pathLayer.glob('ro/mods/*') if f.is_dir()]
                 lTargets.sort()
                 if len(lTargets):
                     p = lTargets[0].parts
-                    d['target'] = r'%(MODS)s/' + p[-1]
+                    d['exists'] = r'%(MODS)s/' + p[-1]
 
-            if 'target' not in d.keys():
+            if 'exists' not in d.keys():
                 continue
                 
             dReturn[name] = d

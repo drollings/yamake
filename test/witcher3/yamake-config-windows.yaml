@@ -1,4 +1,4 @@
-handler: tinymake-witcher3
+PLUGIN: yamake-witcher3
 GITREPO: ./repo
 LAYERS: ./layers
 GAMESPATH: c:/Games/witcher3
@@ -8,8 +8,3 @@ MODS: ./game/mods
 RELEASEPATH: ./downloads/Release/
 GOTY: ./game/bin/x64/witcher3.exe
 SCRIPT_MERGER: c:/Games/witcher3/ScriptMerger/WitcherScriptMerger.exe
-BASES:
-  - goty
-  - w3ee
-  - w3ee_v5
-  - lazarus

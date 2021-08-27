@@ -13,7 +13,7 @@ def is_dir(arg):
     return os.path.exists(arg) and stat.S_ISDIR(os.stat(arg)[stat.ST_MODE])
 
 # The handler which implicitly initializes layers not already covered by the YAML
-def pluginInitialize(builder, Target):
+def pluginInitialize(builder):
     # Now we read the layers folder for implicitly defined simple mods that we don't need dependency info for.
     # By default, layers with a dlc or mods folder are read as stock, with few depends
     if 'LAYERS' in builder.config and is_dir(builder.config['LAYERS']):
@@ -21,6 +21,8 @@ def pluginInitialize(builder, Target):
 
         lLayers = [f for f in pathLayersDir.iterdir() if f.is_dir()]
         lLayers.sort()
+        
+        dReturn = {}
 
         for layerDir in lLayers:
             name = layerDir.parts[-1]
@@ -47,5 +49,9 @@ def pluginInitialize(builder, Target):
 
             if 'target' not in d.keys():
                 continue
+                
+            dReturn[name] = d
 
-            Target(name, builder, d)
+        return dReturn
+
+# TODO:  handlers for Witcher mod unpacking, cooking/uncooking, bundle management.

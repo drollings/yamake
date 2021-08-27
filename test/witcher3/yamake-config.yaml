@@ -1,15 +1,10 @@
-handler: yamake-witcher3
-GITREPO: ./repo
-LAYERS: ./layers
-GAMESPATH: ./c/Games/witcher3
-GAME: ./game
-DLC: ./game/dlc
-MODS: ./game/mods
-RELEASEPATH: ./downloads/Release/
-GOTY: ./game/bin/x64/witcher3.exe
-SCRIPT_MERGER: ./c/Games/witcher3/ScriptMerger/WitcherScriptMerger.exe
-BASES:
-  - goty
-  - w3ee
-  - w3ee_v5
-  - lazarus
+PLUGIN: yamake-witcher3
+GITREPO: /home/danielr/Witcher3/repo
+LAYERS: /home/danielr/Witcher3/layers
+GAMESPATH: /home/danielr/Witcher3/c/Games/witcher3
+GAME: /home/danielr/Witcher3/game
+DLC: /home/danielr/Witcher3/game/dlc
+MODS: /home/danielr/Witcher3/game/mods
+RELEASEPATH: /home/danielr/Witcher3/downloads/Release/
+GOTY: /home/danielr/Witcher3/game/bin/x64/witcher3.exe
+SCRIPT_MERGER: /home/danielr/Witcher3/c/Games/witcher3/ScriptMerger/WitcherScriptMerger.exe

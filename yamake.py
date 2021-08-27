@@ -76,6 +76,7 @@ class Builder:
         self.baseFamily = None
         self.lEssentials = set()
         self.dEssentialsToFamilies = defaultdict(Target, {})
+        self.config = None
         self.plugin = None
         self.debug_output = False
 
@@ -93,12 +94,14 @@ class Builder:
                 # This build system just got super-extensible.
                 ############################################################
 
-                if 'handler' in self.config:
-                    sPlugin = self.config['handler']
+                if 'PLUGIN' in self.config:
+                    sPlugin = self.config['PLUGIN']
 
                     # TODO:  platform-independent determination of other paths
                     sys.path.append('.')
                     self.plugin = __import__(sPlugin)
+
+        print(pformat(self.config))
         return self
 
     def Initialize(self, sBuildFile, sConfigFile=None):
@@ -118,16 +121,16 @@ class Builder:
             for key, value in dLoad.items():
                 Target(key, self, value)
 
-        if self.plugin:
-            self.plugin.pluginInitialize(self, Target)
+        if self.plugin and 'pluginInitialize' in self.plugin.__dict__:
+            self.plugin.pluginInitialize(self)
+            print(pformat(self.lTargets))
             
         self.lEssentials = set([t for t in self.lTargets if t.essential])
 
         [t.finalizeInit(self) for t in self.lTargets]
 
-        if self.plugin and 'pluginFinalize' in self.plugin.__dict__:
-            self.plugin.pluginFinalize(Target)
-
+        if self.plugin and 'pluginTargetFinalize' in self.plugin.__dict__:
+            self.plugin.pluginTargetFinalize(Target)
 
         # base = self.index['base']
         # self.lBases = set([t for t in self.lTargets if t is base or (t.provides and base in t.provides)])

@@ -19,5 +19,6 @@ _deps
 Thumbs.db
 
 __pycache__
+*.py[cod]
 
 target

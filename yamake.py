@@ -62,7 +62,7 @@ def lsset(s):
     l = [ repr(i) for i in s ]
     l.sort()
     return ' '.join(l)
- 
+
 ############################################################
 # The Target class should match the functionality of a Makefile target, with
 # the option to subclass for more advanced scenarios.
@@ -127,10 +127,10 @@ class Builder:
                 Target(key, self, value)
             l = self.lTargets
             l.sort()
-            
+
         self.lEssentials = set([t for t in self.lTargets if t.essential])
 
-        [t.finalizeInit(self) for t in self.lTargets]
+        [t.FinalizeInit(self) for t in self.lTargets]
 
         if self.plugin and 'pluginTargetFinalize' in self.plugin.__dict__:
             self.plugin.pluginTargetFinalize(Target)
@@ -267,7 +267,7 @@ class Builder:
                 lDepends -= lProvides
                 lD -= lProvides
 
-            l = set([t for t in lDepends if not t.depends or t.Depends() <= lProvides]) 
+            l = set([t for t in lDepends if not t.depends or t.Depends() <= lProvides])
             l &= lQueueSet
             if l:
                 lAdd = list(l)
@@ -275,7 +275,7 @@ class Builder:
                 lDepths.append(lAdd)
                 lDepends -= l
                 lProvides |= l
-            
+
             if debug_output:
                 print('\t--- lDepends', lDepends)
             while lD and lD != lDepends:
@@ -287,9 +287,9 @@ class Builder:
                 lD -= lProvides
 
             lP |= set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
-            lP -= lProvides 
+            lP -= lProvides
 
-            count -= 1            
+            count -= 1
             if not count:
                 break
 
@@ -312,7 +312,7 @@ class Builder:
             default = None
             if 'default' in self.index:
                 default = self.index['default']
-                
+
             if default and default.depends:
                 lTargets = default.depends
                 # print("%-26.26s Attempting default build: %s" % (START, lTargets))
@@ -320,7 +320,7 @@ class Builder:
                 return False, lOutput
 
         lTargetSet = set(lTargets)
-        
+
         # Get "any" and "essential" targets accounted for
         if 'any' in self.index and self.index['any'].depends:
             lTargetSet |= self.index['any'].depends
@@ -341,7 +341,7 @@ class Builder:
         lFullProvides = lQueueSet | lProvides
 
         # lD and lP act as sets of new additions for lDepends and lProvides, respectively.
-        # They are looped over until emptied.        
+        # They are looped over until emptied.
         lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends])))
         lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
 
@@ -352,7 +352,7 @@ class Builder:
             print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
             print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
             print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
-        
+
         lChosenEssentials = lFullProvides & lEssentials
         lChosenEssentials |= self.lEssentials & set(list(chain.from_iterable([t.provides for t in lChosenEssentials if t.provides])))
         lExcludedEssentials = lEssentials - lChosenEssentials
@@ -360,7 +360,7 @@ class Builder:
         if debug_output:
             print('%s%-15.15s%s %s' % (WHI, 'lChosenEssentials', NRM, lsset(lChosenEssentials)))
             print('%s%-15.15s%s %s' % (WHI, 'lExcludedEssentials', NRM, lsset(lExcludedEssentials)))
-        
+
 
         # The counter shouldn't be needed, but preventing infinite loops in the case of malformed YAML is nice.
         counter = 5
@@ -383,7 +383,7 @@ class Builder:
                 lProvides |= lP
                 lFullProvides = lQueueSet | lProvides
                 lP = set(list(chain.from_iterable([t.provides for t in lFullProvides if t.provides])))
-                lP -= lProvides 
+                lP -= lProvides
 
             if debug_output:
                 print('\tlP loop done', 'lP', lsset(lP), 'lProvides', lsset(lProvides))
@@ -428,22 +428,25 @@ class Builder:
                     # Fetch the list of other targets that provide this
                     if depend in dProviders:
                         lPP |= set([t for t in dProviders[depend] if not t.depends or (t.Depends() & lChosenEssentials)])
-                        
+
                     # print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
-                    
+
                     if len(lPP) > 1 and lEssentials & lPP:
                         lPP -= lExcludedEssentials | lAbstracts
 
                     # print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
                 elif depend not in lFullProvides:
                     lPP |= set([depend])
-                    
+
                 if not lPP:
                     continue
-                    
+
+                if debug_output:
+                    print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
+
                 if lPP & lProvides and len(lPP & lProvides) == 1:
                     if debug_output:
-                        print('\t%sDisambiguated for %s:%s' % (GRN, repr(depend), NRM), lPP & lFullProvides)
+                        print('\t%sDisambiguated for %s:%s' % (GRN, repr(depend), NRM), lPP & lProvides)
                     lAddToQueue |= lPP & lProvides
                     continue
 
@@ -553,12 +556,13 @@ class Target:
 
         self.exists = None
         self.essential = False
+        self.check_mtime = False
         self.depends = None
         self.provides = None
         self.layers = None
         self.actions = None
         self.clean = None
-        self.mtime = None	# If we have some approximation to an mtime, the function name goes here
+        self.mtime = None
 
         if params and type(params) == dict:
             self.__dict__.update(params)
@@ -566,12 +570,14 @@ class Target:
         # print('%s%-8s%s\t%s' % (YEL, 'INIT', NRM, str(self)))
 
     # This can only be done when we have the full index of targets.
-    def finalizeInit(self, builder):
+    def FinalizeInit(self, builder):
         if self.depends and type(self.depends) != set:
             self.depends = set([builder.index[i] for i in self.depends])
 
         if self.provides and type(self.provides) != set:
             self.provides = set([builder.index[i] for i in self.provides])
+
+        self.CheckTimeStamp(builder)
 
     def __str__(self):
         d = {k: v for (k, v) in self.__dict__.items() if k != 'name' and v}
@@ -588,43 +594,49 @@ class Target:
             return [self.name]
         return self.layers
 
-    def CheckTimeStamp(self, builder, dTimeStamps):
+    def CheckTimeStamp(self, builder):
         if self.exists:
+            if self.mtime:
+                return self.mtime
+
             fileentry = self.exists % builder.config
             # print("Checking existence of", fileentry, "for", self.name)
             if os.path.exists(fileentry):
                 # print ("%s exists" % (fileentry))
-                if self.mtime:
-                    dTimeStamps[self] = os.stat(fileentry).st_mtime
+                if self.check_mtime:
+                    self.mtime = os.stat(fileentry).st_mtime
                 else:
-                    dTimeStamps[self] = 1.0
-                
+                    self.mtime = 1.0
+                return self.mtime
+
+        return None
+
     def Depends(self):
         if not self.depends:
             return set()
         return self.depends
-    
+
     def AbstractDepends(self):
         if not self.depends:
             return set()
         return set([d for d in self.depends if d.IsAbstract()])
-    
+
     def NonAbstractDepends(self):
         if not self.depends:
             return set()
         return set([d for d in self.depends if not d.IsAbstract()])
-    
+
     def Provides(self):
         if not self.provides:
             return set()
         return self.provides
-    
+
     def IsAbstract(self):
         if self.exists or self.actions or self.layers:
             return False
         return True
-            
-    
+
+
 ############################################################
 # Check a build dependency
 # Returns: True/False success code, list of string output
@@ -652,7 +664,7 @@ def BuildCLI(options, args):
                 print(repr(e), str(dProviders[e]))
             else:
                 print(repr(e))
-    
+
     result, lQueueSet, lAmbiguous, lEssentials, lFullProvides = builder.Enqueue(lTargets, dProviders, options.debug_output)
 
     if not result:
@@ -691,15 +703,15 @@ def BuildCLI(options, args):
 
 def BuildGUI(options, args):
     import PySimpleGUIQt as sg
-    
+
     # sg.Window(title="Hello World", layout=[[]], margins=(100, 50)).read()
     # sg.Window(title="Hello World", layout=[[]]).read()
-    
+
     layout = [[sg.Text("Hello from PySimpleGUI")], [sg.Button("OK")]]
-    
+
     # Create the window
     window = sg.Window("Demo", layout)
-    
+
     # Create an event loop
     while True:
         event, values = window.read()
@@ -707,7 +719,7 @@ def BuildGUI(options, args):
         # presses the OK button
         if event == "OK" or event == sg.WIN_CLOSED:
             break
-    
+
     window.close()
 
 

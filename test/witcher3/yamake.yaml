@@ -131,6 +131,7 @@ w3ee_5:
 
 aefderaedd:
   depends:
+    - brothers_in_arms
     - community_patch_b_and_n
     - gwent_redux
     - mcm
@@ -400,14 +401,10 @@ better_icons_w3ee:
   depends:
     - w3ee
 
-bugfixes:
-  exists: '%(MODS)s/modCutscenesLightingFix'
+bugfixes: {}
 
-bugfixes_w3ee:
-  exists: '%(MODS)s/mod0300_bugfixes_merged'
-  depends:
-    - w3ee
-    - bugfixes
+bugfixes_legacy:
+  exists: '%(MODS)s/modCutscenesLightingFix'
 
 community_patch_b_and_n:
   exists: '%(MODS)s/modZBesserwisserScripts'

@@ -101,7 +101,7 @@ class Builder:
                     sys.path.append('.')
                     self.plugin = __import__(sPlugin)
 
-        print(pformat(self.config))
+        # print(pformat(self.config))
         return self
 
     def Initialize(self, sBuildFile, sConfigFile=None):
@@ -217,7 +217,7 @@ class Builder:
         import json
 
         lOutput = ["{"]
-        lSaved = ('target', 'layers', 'depends', 'provides', 'clean', 'actions', 'essential', 'check_mtime')
+        lSaved = ('exists', 'actions', 'depends', 'provides', 'clean', 'actions', 'essential', 'check_mtime')
 
         for target in self.lTargets:
             # if target.name in ('base', 'stock'):

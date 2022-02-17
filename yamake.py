@@ -4,7 +4,9 @@
 # June 3, 2021
 
 """
-A simple make/build system around layer directories and git
+A minimalist duck-typed plugin-driven make/build system built around git.
+
+Please see the project's github at https://github.com/drollings/yamake for details.
 """
 
 import os
@@ -320,14 +322,17 @@ class Builder:
                 return False, lOutput
 
         lTargetSet = set(lTargets)
-
-        # Get "any" and "essential" targets accounted for
-        if 'any' in self.index and self.index['any'].depends:
-            lTargetSet |= self.index['any'].depends
-
         lEssentials = set()
-        for essential in self.lEssentials:
-            lEssentials |= dProviders[essential]
+
+        # If we're only dealing in actions, we not build essentials, i.e. if we're only doing "clean" targets
+        print("TARGET ESSENTIAL?", lTargets)
+        if len([ i for i in lTargets if i.actions ]) != len(lTargets):
+            # Get "any" and "essential" targets accounted for
+            if 'any' in self.index and self.index['any'].depends:
+                lTargetSet |= self.index['any'].depends
+
+            for essential in self.lEssentials:
+                lEssentials |= dProviders[essential]
 
         if debug_output:
             print('%-15.15s %s' % ('lTargetSet', lTargetSet))
@@ -599,7 +604,7 @@ class Target:
             if self.mtime:
                 return self.mtime
 
-            fileentry = self.exists % builder.config
+            fileentry = self.exists
             # print("Checking existence of", fileentry, "for", self.name)
             if os.path.exists(fileentry):
                 # print ("%s exists" % (fileentry))
@@ -652,6 +657,7 @@ def BuildCLI(options, args):
     if len(args):
         lTargets = [builder.index[i] for i in args if i in builder.index]
         print("%-22s Attempting build from %s: %s" % (START, options.build, args))
+
     elif 'default' in builder.index and builder.index['default'].depends:
         print('DEFAULT TARGETS:', pformat(builder.index['default'].depends))
         lTargets = builder.index['default'].depends
@@ -673,7 +679,7 @@ def BuildCLI(options, args):
     lOutput = []
 
     lOutput.append('%-80.80s' % HASHDIVIDER)
-    if len(lAmbiguous):
+    if lAmbiguous and len(lAmbiguous):
         lOutput.append('%-16s Can not resolve for %s based on targets %s' % (ERROR, builder.lEssentials, lTargets))
         lOutput.append('%-34s %s' % ('AMBIGUOUS', 'POTENTIALLY PROVIDED BY'))
         for t in lAmbiguous:

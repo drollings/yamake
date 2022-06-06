@@ -577,10 +577,10 @@ class Target:
     # This can only be done when we have the full index of targets.
     def FinalizeInit(self, builder):
         if self.depends and type(self.depends) != set:
-            self.depends = set([builder.index[i] for i in self.depends])
+            self.depends = set([builder.index[i] for i in self.depends if i in builder.index])
 
         if self.provides and type(self.provides) != set:
-            self.provides = set([builder.index[i] for i in self.provides])
+            self.provides = set([builder.index[i] for i in self.provides if i in builder.index])
 
         self.CheckTimeStamp(builder)
 

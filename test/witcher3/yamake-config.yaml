@@ -1,4 +1,4 @@
-PLUGIN: yamake-witcher3
+PLUGIN: yamake-witcher3-plugin
 GITREPO: /home/danielr/Witcher3/repo
 LAYERS: /home/danielr/Witcher3/layers
 GAMESPATH: /home/danielr/Witcher3/c/Games/witcher3

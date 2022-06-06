@@ -11,12 +11,12 @@ default:
 any:
   depends:
     - animal
-    - confusion
+    - confuse
 
 animal:
   essential: True
 
-confusion:
+confuse:
   essential: True
 
 agency:
@@ -150,7 +150,7 @@ surrealism:
   depends:
     - very_cognitive
   provides:
-    - confusion
+    - confuse
 
 funny_things:
   exists: things/funny_things
@@ -190,14 +190,14 @@ bright_colors:
 
 # These are generally confusing things.
 
-amazement:
+amaze:
   depends:
     - animal
     - cognitive
     - magic_tricks
     - agency
 
-bewilderment:
+bewilder:
   depends:
     - animal
     - cognitive
@@ -205,14 +205,14 @@ bewilderment:
     - noises
     - agency
 
-distraction:
+distract:
   depends:
     - animal
     - color_vision
     - bright_colors
     - agency
 
-puzzling:
+puzzle:
   depends:
     - animal
     - hearing
@@ -223,7 +223,7 @@ puzzling:
     - cognitive
     - agency
 
-startling:
+startle:
   depends:
     - animal
     - hearing
@@ -232,7 +232,7 @@ startling:
     - cognitive
     - agency
 
-stunning:
+stun:
   depends:
     - animal
     - hearing
@@ -256,7 +256,7 @@ confuse_a_cat:
   provides:
     - agency
     - surrealism
-    - confusion
+    - confuse
 
 amaze_a_vole:
   exists: things/amaze_a_vole
@@ -266,7 +266,7 @@ amaze_a_vole:
   provides:
     - agency
     - amazement
-    - confusion
+    - confuse
 
 bewilderbeest:
   exists: things/bewilderbeest
@@ -277,7 +277,7 @@ bewilderbeest:
     - bewilderment
   provides:
     - agency
-    - confusion
+    - confuse
 
 distract_a_bee:
   exists: things/distract_a_bee
@@ -288,7 +288,7 @@ distract_a_bee:
   provides:
     - agency
     - distraction
-    - confusion
+    - confuse
 
 puzzle_a_puma:
   exists: things/puzzle_a_puma
@@ -299,8 +299,8 @@ puzzle_a_puma:
     - noises
   provides:
     - agency
-    - puzzling
-    - confusion
+    - puzzle
+    - confuse
 
 startle_a_thompsons_gazelle:
   exists: things/startle_a_thompsons_gazelle
@@ -310,8 +310,8 @@ startle_a_thompsons_gazelle:
     - funny_things
   provides:
     - agency
-    - startling
-    - confusion
+    - startle
+    - confuse
 
 stun_a_stoat:
   exists: things/stun_a_stoat
@@ -319,8 +319,8 @@ stun_a_stoat:
     - stoat
   provides:
     - agency
-    - confusion
-    - stunning
+    - confuse
+    - stun
 
 clean_all:
   actions:

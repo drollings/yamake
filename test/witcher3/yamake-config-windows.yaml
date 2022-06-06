@@ -1,4 +1,4 @@
-PLUGIN: yamake-witcher3
+PLUGIN: yamake-witcher3-plugin
 GITREPO: ./repo
 LAYERS: ./layers
 GAMESPATH: c:/Games/witcher3

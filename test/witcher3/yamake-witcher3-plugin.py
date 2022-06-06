@@ -53,5 +53,7 @@ def pluginInitialize(builder):
             dReturn[name] = d
 
         return dReturn
+    else:
+        return dict()
 
 # TODO:  handlers for Witcher mod unpacking, cooking/uncooking, bundle management.

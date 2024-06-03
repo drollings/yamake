@@ -39,36 +39,45 @@ The repo folder should contain a git repository from which layers can be
 built when needed.
 """
 
-RED = '\033[1;31m'
-GRN = '\033[1;32m'
-YEL = '\033[1;33m'
-BLU = '\033[1;34m'
-MAG = '\033[0;35m'
-CYN = '\033[0;36m'
-WHI = '\033[1;37m'
-NRM = '\033[0m'
+RED = "\033[1;31m"
+GRN = "\033[1;32m"
+YEL = "\033[1;33m"
+BLU = "\033[1;34m"
+MAG = "\033[0;35m"
+CYN = "\033[0;36m"
+WHI = "\033[1;37m"
+NRM = "\033[0m"
 
-ERROR = '[%sERROR%s]' % (RED, NRM)
-WARNING = '[%sWARNING%s]' % (YEL, NRM)
-SUCCESS = '[%sSUCCESS%s]' % (GRN, NRM)
-DEBUG = '[%sDEBUG%s]' % (MAG, NRM)
-INFO = '[%sINFO%s]' % (BLU, NRM)
-EXEC = '[%sEXEC%s]' % (CYN, NRM)
-START = '[%sSTART%s]' % (WHI, NRM)
+ERROR = "[%sERROR%s]" % (RED, NRM)
+WARNING = "[%sWARNING%s]" % (YEL, NRM)
+SUCCESS = "[%sSUCCESS%s]" % (GRN, NRM)
+DEBUG = "[%sDEBUG%s]" % (MAG, NRM)
+INFO = "[%sINFO%s]" % (BLU, NRM)
+EXEC = "[%sEXEC%s]" % (CYN, NRM)
+START = "[%sSTART%s]" % (WHI, NRM)
 
-DIVIDER = '------------------------------------------------------------------------------'
-HASHDIVIDER = '##############################################################################'
-SPACES = '                                                                                '
+DIVIDER = (
+    "------------------------------------------------------------------------------"
+)
+HASHDIVIDER = (
+    "##############################################################################"
+)
+SPACES = (
+    "                                                                                "
+)
+
 
 def lsset(s):
-    l = [ repr(i) for i in s ]
+    l = [repr(i) for i in s]
     l.sort()
-    return ' '.join(l)
+    return " ".join(l)
+
 
 ############################################################
 # The Target class should match the functionality of a Makefile target, with
 # the option to subclass for more advanced scenarios.
 ############################################################
+
 
 class Builder:
     def __init__(self):
@@ -83,10 +92,13 @@ class Builder:
         self.debug_output = False
 
     def _initConfig(self, sConfigFile=None):
-        for i in (sConfigFile, "yamake-config.yaml",
-                  "%s/.config/yamake-config.yaml" % (os.path.expanduser("~"))):
+        for i in (
+            sConfigFile,
+            "yamake-config.yaml",
+            "%s/.config/yamake-config.yaml" % (os.path.expanduser("~")),
+        ):
             if i and os.path.exists(i):
-                with codecs.open(sConfigFile, 'r', 'utf_8') as config_file:
+                with codecs.open(sConfigFile, "r", "utf_8") as config_file:
                     self.config = yaml.safe_load(config_file)
 
                 ############################################################
@@ -96,14 +108,13 @@ class Builder:
                 # This build system just got super-extensible.
                 ############################################################
 
-                if 'PLUGIN' in self.config:
-                    sPlugin = self.config['PLUGIN']
+                if "PLUGIN" in self.config:
+                    sPlugin = self.config["PLUGIN"]
 
                     # TODO:  platform-independent determination of other paths
-                    sys.path.append('.')
+                    sys.path.append(".")
                     self.plugin = __import__(sPlugin)
 
-        # print(pformat(self.config))
         return self
 
     def Initialize(self, sBuildFile, sConfigFile=None):
@@ -111,19 +122,14 @@ class Builder:
             self._initConfig(sConfigFile)
 
         # First we read in the explicit definitions
-        with codecs.open(sBuildFile, 'r', 'utf_8') as build_file:
-            input_str = ''.join(build_file.readlines())
+        with codecs.open(sBuildFile, "r", "utf_8") as build_file:
+            input_str = "".join(build_file.readlines())
             dLoad = yaml.safe_load(input_str)
-
-            # base = Target('base', self, {})
-            # stock = Target('stock', self, {})
-            # all = Target('all', self, {})
-            # clean_all = Target('clean_all', self, {})
 
             for key, value in dLoad.items():
                 Target(key, self, value)
 
-        if self.plugin and 'pluginInitialize' in self.plugin.__dict__:
+        if self.plugin and "pluginInitialize" in self.plugin.__dict__:
             dReturn = self.plugin.pluginInitialize(self)
             for key, value in dReturn.items():
                 Target(key, self, value)
@@ -134,42 +140,28 @@ class Builder:
 
         [t.FinalizeInit(self) for t in self.lTargets]
 
-        if self.plugin and 'pluginTargetFinalize' in self.plugin.__dict__:
+        if self.plugin and "pluginTargetFinalize" in self.plugin.__dict__:
             self.plugin.pluginTargetFinalize(Target)
-
-        # base = self.index['base']
-        # self.lBases = set([t for t in self.lTargets if t is base or (t.provides and base in t.provides)])
-        # stock = self.index['stock']
-        # self.lStocks = set([t for t in self.lTargets if t is stock or (t.provides and stock in t.provides)])
-
-        # stock = self.index['stock']
-        # self.lStocks = [t for t in self.lTargets if t is stock or stock in t.provides]
 
         dProviders = defaultdict(set)
 
         for t in self.lTargets:
-            # Ensure sane assignments of base and baseFamily
-            # lDepends = []
-            # if t.depends:
-            #     lDepends = [depend for depend in t.depends if depend in self.lEssentials]
-            # if len(lDepends) > 1:
-            #     raise SyntaxError("Target %s has multiple essentials: %s" % (t.name, t.depends)).with_traceback(sys.exc_info()[2])
-            # elif len(lDepends) == 1:
-            #     t.base = lDepends[0]
-            #     t.baseFamily = dEssentialsToFamilies[t.base]
-
             # Check for any cyclic dependencies
             lDepends = t.depends
             counter = 1
             while lDepends:
                 if t in lDepends:
-                    raise SyntaxError("CYCLIC DEPENDENCY %s, %s" % (t, lDepends)).with_traceback(sys.exc_info()[2])
+                    raise SyntaxError(
+                        "CYCLIC DEPENDENCY %s, %s" % (t, lDepends)
+                    ).with_traceback(sys.exc_info()[2])
                 lastDepends = lDepends
                 lDepends = [dep.depends for dep in lDepends if dep.depends]
                 lDepends = list(set(list(chain.from_iterable(lDepends))))
                 counter += 1
                 if counter >= 10 or lDepends == lastDepends:
-                    raise SyntaxError("CYCLIC DEPENDENCY").with_traceback(sys.exc_info()[2])
+                    raise SyntaxError("CYCLIC DEPENDENCY").with_traceback(
+                        sys.exc_info()[2]
+                    )
 
             # Check for any cyclic provision
             lProvides = t.provides
@@ -179,12 +171,16 @@ class Builder:
 
             while lProvides:
                 if t in lProvides:
-                    raise SyntaxError("CYCLIC PROVIDE %s, %s" % (t, lProvides)).with_traceback(sys.exc_info()[2])
+                    raise SyntaxError(
+                        "CYCLIC PROVIDE %s, %s" % (t, lProvides)
+                    ).with_traceback(sys.exc_info()[2])
                 lastProvides = lProvides
                 lProvides = [p.provides for p in lProvides if p.provides]
                 lProvides = list(set(list(chain.from_iterable(lProvides))))
                 if lProvides == lastProvides:
-                    raise SyntaxError("CYCLIC PROVIDE").with_traceback(sys.exc_info()[2])
+                    raise SyntaxError("CYCLIC PROVIDE").with_traceback(
+                        sys.exc_info()[2]
+                    )
 
         dFullProviders = {}
 
@@ -192,11 +188,23 @@ class Builder:
         for target, lProviders in dProviders.items():
             lNewSet = set()
             lNewSet |= lProviders
-            lP = set(list(chain.from_iterable([dProviders[p] for p in lNewSet if p in dProviders])))
+            lP = set(
+                list(
+                    chain.from_iterable(
+                        [dProviders[p] for p in lNewSet if p in dProviders]
+                    )
+                )
+            )
             lP -= lNewSet
             while lP:
                 lNewSet |= lP
-                lP = set(list(chain.from_iterable([dProviders[p] for p in lNewSet if p in dProviders])))
+                lP = set(
+                    list(
+                        chain.from_iterable(
+                            [dProviders[p] for p in lNewSet if p in dProviders]
+                        )
+                    )
+                )
                 lP -= lNewSet
             dFullProviders[target] = lNewSet
 
@@ -210,7 +218,9 @@ class Builder:
                 lProvidedEssentials = [t for t in b.provides if t in lEssentials]
             while lProvidedEssentials:
                 baseFamily = lProvidedEssentials[0]
-                lProvidedEssentials = [t for t in baseFamily.Provides() if t in lEssentials]
+                lProvidedEssentials = [
+                    t for t in baseFamily.Provides() if t in lEssentials
+                ]
             dEssentialsToFamilies[b] = baseFamily
 
         return dFullProviders
@@ -219,7 +229,16 @@ class Builder:
         import json
 
         lOutput = ["{"]
-        lSaved = ('exists', 'actions', 'depends', 'provides', 'clean', 'actions', 'essential', 'check_mtime')
+        lSaved = (
+            "exists",
+            "actions",
+            "depends",
+            "provides",
+            "clean",
+            "actions",
+            "essential",
+            "check_mtime",
+        )
 
         for target in self.lTargets:
             # if target.name in ('base', 'stock'):
@@ -230,41 +249,51 @@ class Builder:
         lOutput.append("}")
         return lOutput
 
-    ######################################################################
-    # For our purposes, we need only get the dependency depth, and build each
-    # level of depth sequentially, though we could build its members
-    # concurrently.
-    # Returns:  a list of sets, each least index containing the targets that
-    # had its offset in their dependency depth.
-    def OrderByDepends(self, lTargets, lQueueSet, lEssentials, dProviders, debug_output = False):
+    def OrderByDepends(
+        self, lTargets, lQueueSet, lEssentials, dProviders, debug_output=False
+    ):
         lDepths = [list(set([t for t in lQueueSet & lEssentials if not t.depends]))]
         lDepths.append(list(set([t for t in lQueueSet & lEssentials if t.depends])))
         lProvides = lQueueSet & lEssentials
-        lProvides |= set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
+        lProvides |= set(
+            list(chain.from_iterable([t.provides for t in lProvides if t.provides]))
+        )
         lDepends = lQueueSet - lProvides
 
         if debug_output:
-            print('%-78.78s' % ('OrderByDepends %s' % HASHDIVIDER))
-            print('\tlDepends', lsset(lDepends))
-            print('\tlProvides', lsset(lProvides))
+            print("%-78.78s" % ("OrderByDepends %s" % HASHDIVIDER))
+            print("\tlDepends", lsset(lDepends))
+            print("\tlProvides", lsset(lProvides))
 
         count = 10
         lP = set()
         lDepends -= lP
-        lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends is not None])))
+        lD = set(
+            list(
+                chain.from_iterable(
+                    [t.depends for t in lDepends if t.depends is not None]
+                )
+            )
+        )
 
         while lDepends or lD or lP:
             if debug_output:
-                print('%-78.78s' % ('lDepends loop %s' % DIVIDER))
-                print('\tlDepends', lsset(lDepends))
-                print('\tlD', lsset(lD))
-                print('\tlP', lsset(lP))
+                print("%-78.78s" % ("lDepends loop %s" % DIVIDER))
+                print("\tlDepends", lsset(lDepends))
+                print("\tlD", lsset(lD))
+                print("\tlP", lsset(lP))
 
             while lP and lP != lProvides:
                 if debug_output:
-                    print('\t--- lP', (lP), '\tlProvides', lProvides)
+                    print("\t--- lP", (lP), "\tlProvides", lProvides)
                 lProvides |= lP
-                lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
+                lP = set(
+                    list(
+                        chain.from_iterable(
+                            [t.provides for t in lProvides if t.provides]
+                        )
+                    )
+                )
                 lP -= lProvides
                 lDepends -= lProvides
                 lD -= lProvides
@@ -279,16 +308,24 @@ class Builder:
                 lProvides |= l
 
             if debug_output:
-                print('\t--- lDepends', lDepends)
+                print("\t--- lDepends", lDepends)
             while lD and lD != lDepends:
                 if debug_output:
-                    print('\t--- lD', (lD))
+                    print("\t--- lD", (lD))
                 lDepends |= lD
-                lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends is not None])))
+                lD = set(
+                    list(
+                        chain.from_iterable(
+                            [t.depends for t in lDepends if t.depends is not None]
+                        )
+                    )
+                )
                 lD -= lDepends
                 lD -= lProvides
 
-            lP |= set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
+            lP |= set(
+                list(chain.from_iterable([t.provides for t in lProvides if t.provides]))
+            )
             lP -= lProvides
 
             count -= 1
@@ -296,24 +333,22 @@ class Builder:
                 break
 
         if debug_output:
-            print('\tlD', lsset(lD))
-            print('\tlProvides', lsset(lProvides))
-            print('%-78.78s' % ('lDepths %s' % DIVIDER))
+            print("\tlD", lsset(lD))
+            print("\tlProvides", lsset(lProvides))
+            print("%-78.78s" % ("lDepths %s" % DIVIDER))
             for i in lDepths:
-                print('\t%s' % i)
+                print("\t%s" % i)
 
-        lReturn = [t for t in chain.from_iterable([t for t in lDepths]) if not t.IsAbstract()]
+        lReturn = [
+            t for t in chain.from_iterable([t for t in lDepths]) if not t.IsAbstract()
+        ]
         return lReturn
 
-    ############################################################
-    # Check a build dependency
-    # Returns: True/False success code, a list of targets in build order,
-    # a list of ambiguous targets if any
-    def Enqueue(self, lTargets, dProviders, debug_output = False):
+    def Enqueue(self, lTargets, dProviders, debug_output=False):
         if not lTargets:
             default = None
-            if 'default' in self.index:
-                default = self.index['default']
+            if "default" in self.index:
+                default = self.index["default"]
 
             if default and default.depends:
                 lTargets = default.depends
@@ -326,20 +361,24 @@ class Builder:
 
         # If we're only dealing in actions, we not build essentials, i.e. if we're only doing "clean" targets
         print("TARGET ESSENTIAL?", lTargets)
-        if len([ i for i in lTargets if i.actions ]) != len(lTargets):
+        if len([i for i in lTargets if i.actions]) != len(lTargets):
             # Get "any" and "essential" targets accounted for
-            if 'any' in self.index and self.index['any'].depends:
-                lTargetSet |= self.index['any'].depends
+            if "any" in self.index and self.index["any"].depends:
+                lTargetSet |= self.index["any"].depends
 
             for essential in self.lEssentials:
                 lEssentials |= dProviders[essential]
 
         if debug_output:
-            print('%-15.15s %s' % ('lTargetSet', lTargetSet))
+            print("%-15.15s %s" % ("lTargetSet", lTargetSet))
 
         lQueueSet = lTargetSet
-        lProvides = set(list(chain.from_iterable([t.provides for t in lQueueSet if t.provides])))
-        lDepends = set(list(chain.from_iterable([t.depends for t in lQueueSet if t.depends])))
+        lProvides = set(
+            list(chain.from_iterable([t.provides for t in lQueueSet if t.provides]))
+        )
+        lDepends = set(
+            list(chain.from_iterable([t.depends for t in lQueueSet if t.depends]))
+        )
         lAbstracts = set([t for t in lQueueSet | lDepends if t.IsAbstract()])
         lDepends |= lAbstracts
         lQueueSet -= lAbstracts
@@ -348,24 +387,37 @@ class Builder:
         # lD and lP act as sets of new additions for lDepends and lProvides, respectively.
         # They are looped over until emptied.
         lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends])))
-        lP = set(list(chain.from_iterable([t.provides for t in lProvides if t.provides])))
+        lP = set(
+            list(chain.from_iterable([t.provides for t in lProvides if t.provides]))
+        )
 
         if debug_output:
-            print('%-78.78s' % ('Enqueue %s' % HASHDIVIDER))
-            print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
-            print('%-15.15s %s' % ('lAbstracts', lsset(lAbstracts)))
-            print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
-            print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
-            print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
+            print("%-78.78s" % ("Enqueue %s" % HASHDIVIDER))
+            print("%-15.15s %s" % ("lQueueSet", lsset(lQueueSet)))
+            print("%-15.15s %s" % ("lAbstracts", lsset(lAbstracts)))
+            print("%-15.15s %s" % ("lDepends", lsset(lDepends)))
+            print("%-15.15s %s" % ("lProvides", lsset(lProvides)))
+            print("%-15.15s %s" % ("lFullProvides", lsset(lFullProvides)))
 
         lChosenEssentials = lFullProvides & lEssentials
-        lChosenEssentials |= self.lEssentials & set(list(chain.from_iterable([t.provides for t in lChosenEssentials if t.provides])))
+        lChosenEssentials |= self.lEssentials & set(
+            list(
+                chain.from_iterable(
+                    [t.provides for t in lChosenEssentials if t.provides]
+                )
+            )
+        )
         lExcludedEssentials = lEssentials - lChosenEssentials
 
         if debug_output:
-            print('%s%-15.15s%s %s' % (WHI, 'lChosenEssentials', NRM, lsset(lChosenEssentials)))
-            print('%s%-15.15s%s %s' % (WHI, 'lExcludedEssentials', NRM, lsset(lExcludedEssentials)))
-
+            print(
+                "%s%-15.15s%s %s"
+                % (WHI, "lChosenEssentials", NRM, lsset(lChosenEssentials))
+            )
+            print(
+                "%s%-15.15s%s %s"
+                % (WHI, "lExcludedEssentials", NRM, lsset(lExcludedEssentials))
+            )
 
         # The counter shouldn't be needed, but preventing infinite loops in the case of malformed YAML is nice.
         counter = 5
@@ -373,51 +425,72 @@ class Builder:
         lAddToQueue = set()
 
         if debug_output:
-            print('%-78.78s' % ('Enqueue lDepends loop %s' % HASHDIVIDER))
+            print("%-78.78s" % ("Enqueue lDepends loop %s" % HASHDIVIDER))
 
         # We should be able to empty out lDepends, lD, and lP to get to a complete recipe.
         while lDepends or (lP and lP != lProvides) or (lD and lD != lDepends):
             # First, work out all the provides from lP to the  best depth possible.
             if debug_output:
-                print('%-78.78s' % ('%-3.3s %s %s' % (DIVIDER, 'dependency resolution', DIVIDER)))
-                print('\tlP', lP, 'lProvides', lProvides)
+                print(
+                    "%-78.78s"
+                    % ("%-3.3s %s %s" % (DIVIDER, "dependency resolution", DIVIDER))
+                )
+                print("\tlP", lP, "lProvides", lProvides)
 
             while lP and lP != lProvides:
                 if debug_output:
-                    print('\tlP loop', 'lP', lsset(lP), 'lProvides', lsset(lProvides))
+                    print("\tlP loop", "lP", lsset(lP), "lProvides", lsset(lProvides))
                 lProvides |= lP
                 lFullProvides = lQueueSet | lProvides
-                lP = set(list(chain.from_iterable([t.provides for t in lFullProvides if t.provides])))
+                lP = set(
+                    list(
+                        chain.from_iterable(
+                            [t.provides for t in lFullProvides if t.provides]
+                        )
+                    )
+                )
                 lP -= lProvides
 
             if debug_output:
-                print('\tlP loop done', 'lP', lsset(lP), 'lProvides', lsset(lProvides))
-                print('%-80.80s' % DIVIDER)
+                print("\tlP loop done", "lP", lsset(lP), "lProvides", lsset(lProvides))
+                print("%-80.80s" % DIVIDER)
 
             lDepends -= lFullProvides
 
             # Second, get all the new dependencies from lD.
             if debug_output:
-                print('\tlD', lD, 'lDepends', lDepends)
+                print("\tlD", lD, "lDepends", lDepends)
 
             while lD and lD != lDepends:
                 if debug_output:
-                    print('\tlD loop', 'lD', lsset(lD), 'lDepends', lsset(lDepends))
+                    print("\tlD loop", "lD", lsset(lD), "lDepends", lsset(lDepends))
                 lDepends |= lD
-                lD = set(list(chain.from_iterable([t.depends for t in lDepends if t.depends is not None or t.Depends() & lFullProvides])))
+                lD = set(
+                    list(
+                        chain.from_iterable(
+                            [
+                                t.depends
+                                for t in lDepends
+                                if t.depends is not None or t.Depends() & lFullProvides
+                            ]
+                        )
+                    )
+                )
                 lD -= lDepends
 
             if debug_output:
-                print('\tlD loop done', 'lD', lsset(lD), '\n\tlDepends', lsset(lDepends))
-                print('%-80.80s' % DIVIDER)
+                print(
+                    "\tlD loop done", "lD", lsset(lD), "\n\tlDepends", lsset(lDepends)
+                )
+                print("%-80.80s" % DIVIDER)
 
             lFullProvides = lQueueSet | lProvides
 
             if debug_output:
-                print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
-                print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
-                print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
-                print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
+                print("%-15.15s %s" % ("lQueueSet", lsset(lQueueSet)))
+                print("%-15.15s %s" % ("lDepends", lsset(lDepends)))
+                print("%-15.15s %s" % ("lProvides", lsset(lProvides)))
+                print("%-15.15s %s" % ("lFullProvides", lsset(lFullProvides)))
 
             # See if we have a single possible choice of providers for any dependencies
             for depend in lDepends:
@@ -432,7 +505,13 @@ class Builder:
 
                     # Fetch the list of other targets that provide this
                     if depend in dProviders:
-                        lPP |= set([t for t in dProviders[depend] if not t.depends or (t.Depends() & lChosenEssentials)])
+                        lPP |= set(
+                            [
+                                t
+                                for t in dProviders[depend]
+                                if not t.depends or (t.Depends() & lChosenEssentials)
+                            ]
+                        )
 
                     # print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
 
@@ -447,16 +526,24 @@ class Builder:
                     continue
 
                 if debug_output:
-                    print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
+                    print(
+                        "\t%sSeeking provider for %s:%s %s"
+                        % (MAG, repr(depend), NRM, lPP)
+                    )
 
                 if lPP & lProvides and len(lPP & lProvides) == 1:
                     if debug_output:
-                        print('\t%sDisambiguated for %s:%s' % (GRN, repr(depend), NRM), lPP & lProvides)
+                        print(
+                            "\t%sDisambiguated for %s:%s" % (GRN, repr(depend), NRM),
+                            lPP & lProvides,
+                        )
                     lAddToQueue |= lPP & lProvides
                     continue
 
                 if len(lPP) != 1:
-                    lPP = set([t for t in lPP if t.depends and t.Depends() & lFullProvides])
+                    lPP = set(
+                        [t for t in lPP if t.depends and t.Depends() & lFullProvides]
+                    )
                     # print('\t%sSeeking provider for %s:%s %s' % (MAG, repr(depend), NRM, lPP))
 
                 if len(lPP) != 1:
@@ -465,7 +552,10 @@ class Builder:
 
                 if len(lPP) == 1:
                     if debug_output:
-                        print('\t%sDisambiguated for %s:%s' % (GRN, repr(depend), NRM), lPP)
+                        print(
+                            "\t%sDisambiguated for %s:%s" % (GRN, repr(depend), NRM),
+                            lPP,
+                        )
                     lAddToQueue |= lPP
                     continue
 
@@ -475,21 +565,29 @@ class Builder:
             # print('%-80.80s' % DIVIDER)
 
             if debug_output:
-                print('%-78.78s' % ('Enqueue post disambiguation %s' % DIVIDER))
-                print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
-                print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
-                print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
-                print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
+                print("%-78.78s" % ("Enqueue post disambiguation %s" % DIVIDER))
+                print("%-15.15s %s" % ("lQueueSet", lsset(lQueueSet)))
+                print("%-15.15s %s" % ("lDepends", lsset(lDepends)))
+                print("%-15.15s %s" % ("lProvides", lsset(lProvides)))
+                print("%-15.15s %s" % ("lFullProvides", lsset(lFullProvides)))
 
-            lAddToQueue |= set([t for t in lDepends if t.IsAbstract() == False and t not in lFullProvides and t.Depends() <= lFullProvides])
+            lAddToQueue |= set(
+                [
+                    t
+                    for t in lDepends
+                    if t.IsAbstract() == False
+                    and t not in lFullProvides
+                    and t.Depends() <= lFullProvides
+                ]
+            )
 
             if debug_output:
-                print('%-78.78s' % ('Enqueue final lAddToEqueue %s' % DIVIDER))
-                print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
-                print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
-                print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
-                print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
-                print('%-80.80s' % DIVIDER)
+                print("%-78.78s" % ("Enqueue final lAddToEqueue %s" % DIVIDER))
+                print("%-15.15s %s" % ("lQueueSet", lsset(lQueueSet)))
+                print("%-15.15s %s" % ("lDepends", lsset(lDepends)))
+                print("%-15.15s %s" % ("lProvides", lsset(lProvides)))
+                print("%-15.15s %s" % ("lFullProvides", lsset(lFullProvides)))
+                print("%-80.80s" % DIVIDER)
 
             # Set logic to add to the queue and update sets accordingly
             if lAddToQueue:
@@ -501,7 +599,15 @@ class Builder:
                 lDepends |= lAbstracts - lFullProvides
 
                 if lFullProvides:
-                    lDepends -= set([t for t in lDepends if t.IsAbstract() and t.depends and t.Depends() <= lFullProvides])
+                    lDepends -= set(
+                        [
+                            t
+                            for t in lDepends
+                            if t.IsAbstract()
+                            and t.depends
+                            and t.Depends() <= lFullProvides
+                        ]
+                    )
 
                 lAddToQueue = set()
             else:
@@ -512,33 +618,45 @@ class Builder:
             lDepends -= lFullProvides | lQueueSet
 
             # Make sure lD and lP are only holding things we haven't picked up yet.
-            lP |= set(list(chain.from_iterable([t.provides for t in lQueueSet if t.provides])))
+            lP |= set(
+                list(chain.from_iterable([t.provides for t in lQueueSet if t.provides]))
+            )
             lP -= lFullProvides
 
-            lD |= set(list(chain.from_iterable([t.depends for t in lQueueSet if t.depends])))
+            lD |= set(
+                list(chain.from_iterable([t.depends for t in lQueueSet if t.depends]))
+            )
             lD -= lDepends
             lD -= lFullProvides
 
             if debug_output:
-                print('%-15.15s %s' % ('lQueueSet', lsset(lQueueSet)))
-                print('%-15.15s %s' % ('lAbstracts', lsset(lAbstracts)))
-                print('%-15.15s %s' % ('lDepends', lsset(lDepends)))
-                print('%-15.15s %s' % ('lProvides', lsset(lProvides)))
-                print('%-15.15s %s' % ('lFullProvides', lsset(lFullProvides)))
-                print('%-15.15s %s' % ('lQ lEssentials', lsset(lQueueSet & lEssentials)))
-                print('%-15.15s %s' % ('lD', lD))
-                print('%-15.15s %s' % ('lP', lP))
+                print("%-15.15s %s" % ("lQueueSet", lsset(lQueueSet)))
+                print("%-15.15s %s" % ("lAbstracts", lsset(lAbstracts)))
+                print("%-15.15s %s" % ("lDepends", lsset(lDepends)))
+                print("%-15.15s %s" % ("lProvides", lsset(lProvides)))
+                print("%-15.15s %s" % ("lFullProvides", lsset(lFullProvides)))
+                print(
+                    "%-15.15s %s" % ("lQ lEssentials", lsset(lQueueSet & lEssentials))
+                )
+                print("%-15.15s %s" % ("lD", lD))
+                print("%-15.15s %s" % ("lP", lP))
 
             counter -= 1
             if counter <= 0:
                 break
 
-        lDepends -= set([t for t in lDepends if t.IsAbstract() and t.depends and t.Depends() <= lFullProvides])
+        lDepends -= set(
+            [
+                t
+                for t in lDepends
+                if t.IsAbstract() and t.depends and t.Depends() <= lFullProvides
+            ]
+        )
 
         if debug_output:
-            print('%-80.80s' % (DIVIDER))
-            print('%-15.15s %s' % ('lQueueSet', lQueueSet))
-            print('%-15.15s %s' % ('lDepends', lDepends))
+            print("%-80.80s" % (DIVIDER))
+            print("%-15.15s %s" % ("lQueueSet", lQueueSet))
+            print("%-15.15s %s" % ("lDepends", lDepends))
         return True, lQueueSet, lDepends, lEssentials, lFullProvides
 
 
@@ -577,19 +695,23 @@ class Target:
     # This can only be done when we have the full index of targets.
     def FinalizeInit(self, builder):
         if self.depends and type(self.depends) != set:
-            self.depends = set([builder.index[i] for i in self.depends if i in builder.index])
+            self.depends = set(
+                [builder.index[i] for i in self.depends if i in builder.index]
+            )
 
         if self.provides and type(self.provides) != set:
-            self.provides = set([builder.index[i] for i in self.provides if i in builder.index])
+            self.provides = set(
+                [builder.index[i] for i in self.provides if i in builder.index]
+            )
 
         self.CheckTimeStamp(builder)
 
     def __str__(self):
-        d = {k: v for (k, v) in self.__dict__.items() if k != 'name' and v}
-        return("%-36s %s" % (self.name, pformat(d, width=140)))
+        d = {k: v for (k, v) in self.__dict__.items() if k != "name" and v}
+        return "%-36s %s" % (self.name, pformat(d, width=140))
 
     def __repr__(self):
-        return(self.name)
+        return self.name
 
     def __lt__(self, other):
         return self.name < other.name
@@ -658,51 +780,58 @@ def BuildCLI(options, args):
         lTargets = [builder.index[i] for i in args if i in builder.index]
         print("%-22s Attempting build from %s: %s" % (START, options.build, args))
 
-    elif 'default' in builder.index and builder.index['default'].depends:
-        print('DEFAULT TARGETS:', pformat(builder.index['default'].depends))
-        lTargets = builder.index['default'].depends
+    elif "default" in builder.index and builder.index["default"].depends:
+        print("DEFAULT TARGETS:", pformat(builder.index["default"].depends))
+        lTargets = builder.index["default"].depends
         print("%-22s Attempting build from %s: default" % (START, options.build))
 
     if options.debug_output and builder.lEssentials:
-        print('ESSENTIALS:')
+        print("ESSENTIALS:")
         for e in builder.lEssentials:
             if e in dProviders:
                 print(repr(e), str(dProviders[e]))
             else:
                 print(repr(e))
 
-    result, lQueueSet, lAmbiguous, lEssentials, lFullProvides = builder.Enqueue(lTargets, dProviders, options.debug_output)
+    result, lQueueSet, lAmbiguous, lEssentials, lFullProvides = builder.Enqueue(
+        lTargets, dProviders, options.debug_output
+    )
 
     if not result:
         return False, []
 
     lOutput = []
 
-    lOutput.append('%-80.80s' % HASHDIVIDER)
+    lOutput.append("%-80.80s" % HASHDIVIDER)
     if lAmbiguous and len(lAmbiguous):
-        lOutput.append('%-16s Can not resolve for %s based on targets %s' % (ERROR, builder.lEssentials, lTargets))
-        lOutput.append('%-34s %s' % ('AMBIGUOUS', 'POTENTIALLY PROVIDED BY'))
+        lOutput.append(
+            "%-16s Can not resolve for %s based on targets %s"
+            % (ERROR, builder.lEssentials, lTargets)
+        )
+        lOutput.append("%-34s %s" % ("AMBIGUOUS", "POTENTIALLY PROVIDED BY"))
         for t in lAmbiguous:
             lProviders = []
             if t in dProviders:
                 lProviders = [p.name for p in dProviders[t]]
                 lProviders.sort()
-            sCause = ''
+            sCause = ""
             if len(lProviders):
                 lProviders.sort()
-                sCause = ', '.join(lProviders)
+                sCause = ", ".join(lProviders)
             elif not t.exists and not t.actions:
-                sCause = 'No target, no possible providers'
-            lOutput.append('%-34s %s' % (t.name, sCause))
+                sCause = "No target, no possible providers"
+            lOutput.append("%-34s %s" % (t.name, sCause))
 
         return False, lOutput
 
-    lOutput.append("%-22s %-22s %-28s %s" % (SUCCESS, '', "FILE/DIR", "LAYERS TO WRITE"))
+    lOutput.append(
+        "%-22s %-22s %-28s %s" % (SUCCESS, "", "FILE/DIR", "LAYERS TO WRITE")
+    )
 
     lOrdered = builder.OrderByDepends(lTargets, lQueueSet, lEssentials, dProviders)
 
     for t in lOrdered:
-        lOutput.append('%-34s %-28s %s' % (t.name, t.exists, t.GetLayers()))
+        lOutput.append("%-34s %-28s %s" % (t.name, t.exists, t.GetLayers()))
 
     return True, lOutput
 
@@ -729,33 +858,79 @@ def BuildGUI(options, args):
     window.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
     from optparse import OptionParser
 
-    usage = 'usage: %prog [options] target layer1 layer2 layer3 ...'
+    usage = "usage: %prog [options] target layer1 layer2 layer3 ..."
     args_parser = OptionParser(usage)
 
-    args_parser.add_option("-c", "--config", action="store", dest="config", type="string",
-        help="Specify JSON containing configuration details", default="yamake-config.yaml")
+    args_parser.add_option(
+        "-c",
+        "--config",
+        action="store",
+        dest="config",
+        type="string",
+        help="Specify JSON containing configuration details",
+        default="yamake-config.yaml",
+    )
 
-    args_parser.add_option("-b", "--build", action="store", dest="build", type="string",
-        help="Specify JSON containing a list of layers and build instructions", default="yamake.yaml")
+    args_parser.add_option(
+        "-b",
+        "--build",
+        action="store",
+        dest="build",
+        type="string",
+        help="Specify JSON containing a list of layers and build instructions",
+        default="yamake.yaml",
+    )
 
-    args_parser.add_option("-j", "--json-output", action="store_true", dest="json_output",
-        help="Toggle JSON output", default=False)
+    args_parser.add_option(
+        "-j",
+        "--json-output",
+        action="store_true",
+        dest="json_output",
+        help="Toggle JSON output",
+        default=False,
+    )
 
-    args_parser.add_option("-y", "--yaml-output", action="store_true", dest="yaml_output",
-        help="Toggle YAML output", default=False)
+    args_parser.add_option(
+        "-y",
+        "--yaml-output",
+        action="store_true",
+        dest="yaml_output",
+        help="Toggle YAML output",
+        default=False,
+    )
 
-    args_parser.add_option("", "--debug", action="store_true", dest="debug_output",
-        help="Toggle debugging output", default=False)
+    args_parser.add_option(
+        "",
+        "--debug",
+        action="store_true",
+        dest="debug_output",
+        help="Toggle debugging output",
+        default=False,
+    )
 
-    args_parser.add_option("-l", "--layers", action="store", dest="layers", type="string",
-        help="Specify a layers directory", default=None)
+    args_parser.add_option(
+        "-l",
+        "--layers",
+        action="store",
+        dest="layers",
+        type="string",
+        help="Specify a layers directory",
+        default=None,
+    )
 
-    args_parser.add_option("", "--repo", action="store", dest="layers", type="string",
-        help="Specify a git repo directory", default=None)
+    args_parser.add_option(
+        "",
+        "--repo",
+        action="store",
+        dest="layers",
+        type="string",
+        help="Specify a git repo directory",
+        default=None,
+    )
 
     (options, args) = args_parser.parse_args(sys.argv)
 
@@ -767,6 +942,6 @@ if __name__ == '__main__':
         sys.exit(1)
 
     result, lOutput = BuildCLI(options, args[1:])
-    print('\n'.join(lOutput))
+    print("\n".join(lOutput))
     if not result:
         sys.exit(1)

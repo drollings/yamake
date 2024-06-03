@@ -228,7 +228,10 @@ class Builder:
     def JSONOutput(self):
         import json
 
+        # Start the output with a left curly bracket '{' to indicate beginning of a dictionary in JSON format.
         lOutput = ["{"]
+
+        # A list of attributes that we want to save for each target, used when dumping the data into JSON format.
         lSaved = (
             "exists",
             "actions",
@@ -243,15 +246,16 @@ class Builder:
         for target in self.lTargets:
             # if target.name in ('base', 'stock'):
             #     continue
+
+            # Create a dictionary for each target, but only including keys whose values are non-empty and exist in lSaved.
             d = {k: v for (k, v) in target.__dict__.items() if k in lSaved and v}
             lOutput.append('\t"%s": %s' % (target.name, json.dumps(d)))
 
+        # Add a right curly bracket '}' to end the JSON output.
         lOutput.append("}")
         return lOutput
 
-    def OrderByDepends(
-        self, lTargets, lQueueSet, lEssentials, dProviders, debug_output=False
-    ):
+    def OrderByDepends(self, lQueueSet, lEssentials, debug_output=False):
         lDepths = [list(set([t for t in lQueueSet & lEssentials if not t.depends]))]
         lDepths.append(list(set([t for t in lQueueSet & lEssentials if t.depends])))
         lProvides = lQueueSet & lEssentials
@@ -694,6 +698,16 @@ class Target:
 
     # This can only be done when we have the full index of targets.
     def FinalizeInit(self, builder):
+        """
+        This method finalizes the initialization for a Target instance. It ensures that
+        'depends' and 'provides' attributes are converted to sets if they are not already.
+
+        Parameters:
+            builder (object): The main build object containing targets indexed by name.
+
+        Returns:
+            None
+        """
         if self.depends and type(self.depends) != set:
             self.depends = set(
                 [builder.index[i] for i in self.depends if i in builder.index]
@@ -703,7 +717,6 @@ class Target:
             self.provides = set(
                 [builder.index[i] for i in self.provides if i in builder.index]
             )
-
         self.CheckTimeStamp(builder)
 
     def __str__(self):
@@ -722,6 +735,16 @@ class Target:
         return self.layers
 
     def CheckTimeStamp(self, builder):
+        """
+        This method checks the timestamp of a file associated with this target. If such an existing file exists, it updates the 'mtime' attribute to represent
+        its modification time. It returns None if no such file exists.
+
+        Parameters:
+            builder (object): The main build object containing targets indexed by name.
+
+        Returns:
+            float or None: The timestamp of the file if it exists, otherwise None.
+        """
         if self.exists:
             if self.mtime:
                 return self.mtime
@@ -828,7 +851,7 @@ def BuildCLI(options, args):
         "%-22s %-22s %-28s %s" % (SUCCESS, "", "FILE/DIR", "LAYERS TO WRITE")
     )
 
-    lOrdered = builder.OrderByDepends(lTargets, lQueueSet, lEssentials, dProviders)
+    lOrdered = builder.OrderByDepends(lQueueSet, lEssentials)
 
     for t in lOrdered:
         lOutput.append("%-34s %-28s %s" % (t.name, t.exists, t.GetLayers()))

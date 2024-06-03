@@ -102,7 +102,7 @@ class Builder:
                     self.config = yaml.safe_load(config_file)
 
                 ############################################################
-                # Now this gets interesting!  We're going to let JSON files
+                # Now this gets interesting!  We're going to let YAML files
                 # specify a Python plugin to load with hooks for task-specific
                 # logic, if anything beyond the basics is required.
                 # This build system just got super-extensible.
@@ -226,9 +226,14 @@ class Builder:
         return dFullProviders
 
     def JSONOutput(self):
+        """
+        Generates a JSON representation of the targets in the system. This includes information about dependencies, provides, actions etc.
+
+        Returns:
+            str: A string containing a JSON object with target details.
+        """
         import json
 
-        # Start the output with a left curly bracket '{' to indicate beginning of a dictionary in JSON format.
         lOutput = ["{"]
 
         # A list of attributes that we want to save for each target, used when dumping the data into JSON format.
@@ -244,9 +249,6 @@ class Builder:
         )
 
         for target in self.lTargets:
-            # if target.name in ('base', 'stock'):
-            #     continue
-
             # Create a dictionary for each target, but only including keys whose values are non-empty and exist in lSaved.
             d = {k: v for (k, v) in target.__dict__.items() if k in lSaved and v}
             lOutput.append('\t"%s": %s' % (target.name, json.dumps(d)))

@@ -68,6 +68,14 @@ SPACES = (
 
 
 def lsset(s):
+    """Return a sorted string representation of the set s.
+
+    Args:
+        s (set): The input set to be sorted and represented as a string.
+
+    Returns:
+        str: A space-separated, sorted string representing the elements of the set.
+    """
     l = [repr(i) for i in s]
     l.sort()
     return " ".join(l)
@@ -92,6 +100,18 @@ class Builder:
         self.debug_output = False
 
     def _initConfig(self, sConfigFile=None):
+        """Initialize builds from a build file and optional configuration file.
+
+        Args:
+            sBuildFile (str): The path to the build file.
+            sConfigFile (str, optional): Path to an optional config file. Defaults to None.
+
+        Returns:
+            dict: A dictionary of full providers keyed by target.
+
+        Raises:
+            SyntaxError: If there is a cyclic dependency or provide in the build file.
+        """
         for i in (
             sConfigFile,
             "yamake-config.yaml",
@@ -258,6 +278,17 @@ class Builder:
         return lOutput
 
     def OrderByDepends(self, lQueueSet, lEssentials, debug_output=False):
+        """
+        This function orders targets by their dependencies and provides. It takes in a list of all targets (lQueueSet), a set of essentials, and an optional debug output flag.
+
+        Parameters:
+            - lQueueSet (list): A list containing all the targets.
+            - lEssentials (set): A set containing essential targets.
+            - debug_output (bool): An optional parameter to print debug information during execution.
+
+        Returns:
+            list: A list of ordered target objects by their dependencies and provides.
+        """
         lDepths = [list(set([t for t in lQueueSet & lEssentials if not t.depends]))]
         lDepths.append(list(set([t for t in lQueueSet & lEssentials if t.depends])))
         lProvides = lQueueSet & lEssentials
@@ -351,6 +382,21 @@ class Builder:
         return lReturn
 
     def Enqueue(self, lTargets, dProviders, debug_output=False):
+        """Analyze dependencies to determine a valid build order.
+
+        Args:
+            lQueueSet (set of Target): A set of targets that have been queued for processing.
+            lProvides (set of Target): A set of targets that are known to provide certain functionality.
+            debug_output (bool, optional): If True, print debugging information. Defaults to False.
+
+        Returns:
+            tuple: A tuple containing:
+                - bool: Indicates whether the function was successful or not.
+                - set of Target: The final queue set after processing dependencies.
+                - set of Target: The remaining depends in the queue.
+                - set of Target: Essential targets that were found during analysis.
+                - set of Target: All targets that have been fully provided by the current queue.
+        """
         if not lTargets:
             default = None
             if "default" in self.index:

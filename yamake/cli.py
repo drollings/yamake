@@ -14,7 +14,7 @@ import importlib.util
 import logging
 from typing import List
 
-from core import registry, run_targets, load_plugin
+from core import index, run_targets, load_plugin
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ def parse_args(args=None):
 
     parser.add_argument("-f", "--file", dest="build_file", help="Python file containing build definitions")
 
-    parser.add_argument("-c", "--clean", action="store_true", help="Clean targets instead of building them")
+    parser.add_argument("--clean", action="store_true", help="Clean targets instead of building them")
 
     parser.add_argument("-n", "--dry-run", action="store_true", help="Don't actually build, just show what would be built")
 
@@ -36,7 +36,7 @@ def parse_args(args=None):
 
     parser.add_argument("-l", "--list", action="store_true", help="List all available targets")
 
-    parser.add_argument("-d", "--debug", action="store_true", help="Show debug output")
+    parser.add_argument("--debug", action="store_true", help="Show debug output")
 
     return parser.parse_args(args)
 
@@ -74,9 +74,9 @@ def load_build_file(file_path):
 
 def list_targets():
     """List all available targets with their dependencies."""
-    targets = registry.get_targets()
-    default_targets = registry.get_default_targets()
-    essential_targets = registry.get_essential_targets()
+    targets = index.get_targets()
+    default_targets = index.get_default_targets()
+    essential_targets = index.get_essential_targets()
 
     print("Available targets:")
     print("=================")
@@ -106,8 +106,8 @@ def list_targets():
             print(f"  provides: {provides}")
 
         # Show output file if any
-        if target.exists:
-            print(f"  output: {target.exists}")
+        if target.exists_in_fs:
+            print(f"  output: {target.exists_in_fs}")
 
         print()
 

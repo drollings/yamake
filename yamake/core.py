@@ -1,7 +1,7 @@
 """
 Core functionality for the yamake build system.
 
-This module contains the decorator implementations, registry, and dependency resolution
+This module contains the decorator implementations, index, and dependency resolution
 algorithms that power the yamake build system.
 """
 
@@ -37,9 +37,9 @@ EXEC = f"[{CYN}EXEC{NRM}]"
 START = f"[{WHI}START{NRM}]"
 
 
-# Target registry - global state to track all registered targets
-class Registry:
-    """Registry for tracking all build targets."""
+# Target index - global state to track all registered targets
+class TargetIndex:
+    """TargetIndex for tracking all build targets."""
 
     def __init__(self):
         self.targets = {}  # name -> Target object
@@ -48,7 +48,7 @@ class Registry:
         self.plugins = []
 
     def register(self, target):
-        """Register a target in the global registry."""
+        """Register a target in the global index."""
         if target.name in self.targets:
             logger.warning(f"{WARNING} Overwriting existing target: {target.name}")
         self.targets[target.name] = target
@@ -75,15 +75,15 @@ class Registry:
         return [self.targets[name] for name in self.essentials]
 
     def clear(self):
-        """Clear the registry."""
+        """Clear the index."""
         self.targets.clear()
         self.default_targets.clear()
         self.essentials.clear()
         self.plugins.clear()
 
 
-# Create a global registry
-registry = Registry()
+# Create a global index
+index = TargetIndex()
 
 
 class Target:
@@ -95,7 +95,7 @@ class Target:
         action_func: Callable = None,
         depends: List[str] = None,
         provides: List[str] = None,
-        exists: str = None,
+        exists_in_fs: str = None,
         essential: bool = False,
         clean_func: Callable = None,
         check_mtime: bool = False,
@@ -106,7 +106,7 @@ class Target:
         self.action_func = action_func
         self.depends = set(depends) if depends else set()
         self.provides = set(provides) if provides else set()
-        self.exists = exists
+        self.exists_in_fs = exists_in_fs
         self.essential = essential
         self.clean_func = clean_func
         self.check_mtime = check_mtime
@@ -123,13 +123,13 @@ class Target:
         self.provides = {targets_dict[p] for p in self.provides if p in targets_dict}
 
     def get_mtime(self):
-        """Get the modification time of the target's output file if it exists."""
-        if not self.exists:
+        """Get the modification time of the target's output file if it exists_in_fs."""
+        if not self.exists_in_fs:
             return None
 
-        if os.path.exists(self.exists):
+        if os.path.exists(self.exists_in_fs):
             if self.check_mtime:
-                self.mtime = os.stat(self.exists).st_mtime
+                self.mtime = os.stat(self.exists_in_fs).st_mtime
             else:
                 self.mtime = 1.0
             return self.mtime
@@ -154,7 +154,7 @@ class Target:
         return True, f"No action for target: {self.name}"
 
     def execute_clean(self, dry_run=False):
-        """Execute the target's clean function if it exists."""
+        """Execute the target's clean function if it exists_in_fs."""
         if dry_run:
             return True, f"Would clean target: {self.name}"
 
@@ -168,7 +168,7 @@ class Target:
 
     def needs_update(self, dependency_mtimes):
         """Check if the target needs to be rebuilt based on dependency modification times."""
-        if not self.exists:
+        if not self.exists_in_fs:
             return True
 
         target_mtime = self.get_mtime()
@@ -186,11 +186,11 @@ class Target:
         """Check if this is an abstract target (no concrete output)."""
         if self._is_abstract:
             return True
-        return not (self.exists or self.action_func)
+        return not (self.exists_in_fs or self.action_func)
 
 
 # Decorator functions
-def target(name=None, depends=None, provides=None, exists=None, check_mtime=False, essential=False):
+def target(name=None, depends=None, provides=None, exists_in_fs=None, check_mtime=False, essential=False):
     """Decorator to define a build target."""
 
     def decorator(func):
@@ -198,8 +198,8 @@ def target(name=None, depends=None, provides=None, exists=None, check_mtime=Fals
         if name is None:
             name = func.__name__
 
-        tgt = Target(name=name, action_func=func, depends=depends, provides=provides, exists=exists, essential=essential, check_mtime=check_mtime)
-        registry.register(tgt)
+        tgt = Target(name=name, action_func=func, depends=depends, provides=provides, exists_in_fs=exists_in_fs, essential=essential, check_mtime=check_mtime)
+        index.register(tgt)
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -220,13 +220,13 @@ def default(func=None):
 
     def decorator(func):
         target_name = func.__name__
-        tgt = registry.get(target_name)
+        tgt = index.get(target_name)
         if tgt:
             tgt.is_default = True
         else:
             # Create a new target and mark it as default
             tgt = Target(name=target_name, action_func=func, is_default=True)
-            registry.register(tgt)
+            index.register(tgt)
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -244,7 +244,7 @@ def provides(*artifacts):
 
     def decorator(func):
         target_name = func.__name__
-        tgt = registry.get(target_name)
+        tgt = index.get(target_name)
         if tgt:
             tgt.provides.update(artifacts)
 
@@ -262,13 +262,13 @@ def essential(func=None):
 
     def decorator(func):
         target_name = func.__name__
-        tgt = registry.get(target_name)
+        tgt = index.get(target_name)
         if tgt:
             tgt.essential = True
         else:
             # Create a new target and mark it as essential
             tgt = Target(name=target_name, action_func=func, essential=True)
-            registry.register(tgt)
+            index.register(tgt)
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -284,7 +284,7 @@ def essential(func=None):
 def clean(func):
     """Add a clean function to a target."""
     target_name = func.__name__.replace("clean_", "")
-    tgt = registry.get(target_name)
+    tgt = index.get(target_name)
     if tgt:
         tgt.clean_func = func
     else:
@@ -301,11 +301,11 @@ def load_plugin(module_name):
     """Load a plugin module."""
     try:
         plugin = __import__(module_name, fromlist=["*"])
-        registry.plugins.append(plugin)
+        index.plugins.append(plugin)
 
         # Let the plugin initialize
         if hasattr(plugin, "initialize"):
-            plugin.initialize(registry)
+            plugin.initialize(index)
 
         return plugin
     except ImportError as e:
@@ -315,12 +315,12 @@ def load_plugin(module_name):
 
 def get_targets():
     """Get all registered targets."""
-    return registry.get_targets()
+    return index.get_targets()
 
 
-def _calculate_providers(registry):
+def _calculate_providers(index):
     """Calculate which targets provide which other targets."""
-    targets = registry.targets
+    targets = index.targets
     providers = defaultdict(set)
 
     for target_name, target in targets.items():
@@ -442,11 +442,11 @@ def run_targets(target_names=None, clean_mode=False, dry_run=False, debug=False)
     Returns:
         Tuple of (success, messages)
     """
-    all_targets = {t.name: t for t in registry.get_targets()}
+    all_targets = {t.name: t for t in index.get_targets()}
 
     # Use default targets if none specified
     if not target_names:
-        default_targets = registry.get_default_targets()
+        default_targets = index.get_default_targets()
         if default_targets:
             target_names = [t.name for t in default_targets]
         else:
@@ -456,10 +456,10 @@ def run_targets(target_names=None, clean_mode=False, dry_run=False, debug=False)
     messages.append(f"{START} Building targets: {', '.join(target_names)}")
 
     # Get the direct providers and full transitive closure of providers
-    providers, full_providers = _calculate_providers(registry)
+    providers, full_providers = _calculate_providers(index)
 
     # Get essential targets
-    essential_target_names = {t.name for t in registry.get_essential_targets()}
+    essential_target_names = {t.name for t in index.get_essential_targets()}
 
     # Resolve all dependencies
     targets_to_build = _resolve_dependencies(target_names, all_targets, providers, full_providers, essential_target_names)
@@ -491,7 +491,7 @@ def run_targets(target_names=None, clean_mode=False, dry_run=False, debug=False)
             dependencies = [d.get_mtime() for d in target.depends if not d.is_abstract()]
             needs_update = target.needs_update(dependencies)
 
-            if needs_update or not target.exists:
+            if needs_update or not target.exists_in_fs:
                 status, msg = target.execute(dry_run)
             else:
                 status, msg = True, f"Target {target_name} is up to date"

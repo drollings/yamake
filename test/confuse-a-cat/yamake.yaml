@@ -197,7 +197,7 @@ amaze:
     - magic_tricks
     - agency
 
-bewilder:
+bewilderment:
   depends:
     - animal
     - cognitive
